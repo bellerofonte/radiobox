@@ -1,0 +1,13 @@
+@import url(https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css);
+
+html,
+body,
+:global(#root) {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    color: #000;
+    background: #fff;
+    margin: 0;
+    height: 100%;
+    cursor: default;
+}
