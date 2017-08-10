@@ -1,0 +1,64 @@
+/*.player {*/
+    /*left: 0;*/
+    /*right: 0;*/
+    /*top: 0; !* or top: 0, or any needed value *!*/
+    /*height: 11vh;*/
+    /*position: fixed;*/
+    /*z-index: 1000000; !* or even higher to prevent guarantee overlapping *!*/
+    /*background: white;*/
+    /*padding: 0;*/
+    /*margin: 0;*/
+    /*border-bottom: solid 1px #ccc;*/
+/*}*/
+
+.player {
+    left: 0;
+    right: 0;
+    z-index: 1000000; /* or even higher to prevent guarantee overlapping */
+    background: white;
+    padding: 0;
+    margin: 0;
+    border-bottom: solid 1px #ccc;
+}
+
+.player-inner {
+    max-width: 60vh; /* just for example */
+    width: 100vw;
+    margin: 0 auto;
+    /*padding: 5px 0;*/
+    text-align: center;
+}
+
+.player-btn-set {
+    display: inline-block;
+    vertical-align: middle;
+    margin: 0;
+    padding: 0;
+}
+
+.player-btn-set > a {
+    display: inline;
+    vertical-align: middle;
+}
+
+.player-btn-set > a:hover {
+    color: rebeccapurple;
+}
+
+.player-btn-volume {
+    margin: 0 3vw;
+    padding: 0;
+    font-size: 4vh;
+}
+
+.player-btn-play {
+    margin: 0;
+    padding: 0;
+    font-size: 5vh;
+}
+
+.player-title {
+    padding: calc(1vh/2) 0;
+    overflow: scroll;
+    /*max-height: 4vh;*/
+}

@@ -1,0 +1,67 @@
+.selector {
+    left: 0;
+    right: 0;
+    z-index: 1000000; /* or even higher to prevent guarantee overlapping */
+    background: white;
+    padding: 0;
+    margin: 0;
+}
+
+.selector-inner {
+    max-width: 60vh; /* just for example */
+    width: 100vw;
+    margin: 0 auto;
+    text-align: center;
+}
+
+
+.selector-list {
+    list-style: none;
+    text-align: left;
+    padding: 0;
+    margin: 0;
+}
+
+.selector-list > li {
+    padding: 0;
+    border-bottom: solid 1px #ddd;
+}
+
+.selector-list > li > a:hover {
+    color: rebeccapurple;
+}
+
+.selector-logo {
+    padding: 0;
+    margin: 0;
+    font-size: 6vh;
+}
+
+.selector-logo1 {
+    background-color: #ffd8de;
+    color: #cd6a6e;
+}
+
+.selector-logo2 {
+    background-color: #caeecd;
+    color: #5fb388;
+}
+
+.selector-logo3 {
+    background-color: #cae0e6;
+    color: #95b9ed;
+}
+
+.selector-logo4 {
+    background-color: lightyellow;
+    color: #bdbc88;
+}
+
+.selector-logo5 {
+    background-color: #e9cbee;
+    color: #b672cc;
+}
+
+.selector-title {
+    padding: 1vh;
+}
