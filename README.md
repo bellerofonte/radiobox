@@ -7,7 +7,7 @@ Using following request to rule the OSMC box
 * **Run addon**
 http://osmc:8080/jsonrpc?request={"jsonrpc":"2.0","id":1,"method":"Addons.ExecuteAddon","params":{"addonid":"plugin.audio.radio_de"}}
 
-* **Get 'my stations'*
+* **Get 'my stations'**
 http://osmc:8080/jsonrpc?request={"method":"Files.GetDirectory","id":44,"jsonrpc":"2.0","params":{"directory":"plugin://plugin.audio.radio_de/stations/my"}}
 
 * **Play station**
