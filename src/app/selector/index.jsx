@@ -7,9 +7,9 @@ export default ({stations, playerOpen}) => {
     const items = stations
         .filter(file => file.type === 'song')
         .map((file, index) => (
-            <li key={index}>
+            <li key={index}  onClick={() => playerOpen(file.file)}>
                 <span className={`${css.selectorLogo} ${logoClasses[index % 5]}`}><i className="fa fa-fw fa-music"/></span>
-                <a className={css.selectorTitle} onClick={() => playerOpen(file.file)}>{file.label}</a>
+                <span className={css.selectorTitle}>{file.label}</span>
             </li>
         ));
 

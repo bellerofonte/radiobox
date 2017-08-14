@@ -4,8 +4,10 @@ import css from './index.css';
 export default ({title, status, playerSetVolume, playerPlayPause}) => {
     return (<div className={css.player}>
         <div className={css.playerInner}>
-            <div className={css.playerTitle}>
-                {title}
+            <div className={css.playerTitleContainer}>
+                <div className={css.playerTitle}>
+                    <p>{title}</p>
+                </div>
             </div>
             <div className={css.playerBtnSet}>
                 <a className={css.playerBtnVolume} onClick={() => playerSetVolume(-10)}>

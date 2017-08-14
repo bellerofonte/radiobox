@@ -57,7 +57,7 @@ export default class extends React.PureComponent {
                             break;
                         case "Player.GetItem":
                             const item = j.result.item || { };
-                            item.label && this.setState({title: item.label, status: 'playing'});
+                            item.label && this.setLabel(item.label);
                             break;
                         case "Files.GetDirectory":
                             this.setState({stations: (j.result.files || [ ])});
@@ -80,6 +80,16 @@ export default class extends React.PureComponent {
                             break;
                     }
                 }
+            }
+        };
+
+        this.setLabel = (label) => {
+            if (+label) {
+                const station = this.state.stations.find(s => s.file.endsWith(label));
+                this.setState({title: (station ? station.label : label), status: 'playing'});
+            }
+            else {
+                this.setState({title: label, status: 'playing'});
             }
         };
 

@@ -27,8 +27,8 @@
     border-bottom: solid 1px #ddd;
 }
 
-.selector-list > li > a:hover {
-    color: rebeccapurple;
+.selector-list > li:hover {
+    background-color: #eee;
 }
 
 .selector-logo {
