@@ -1,10 +1,10 @@
 {
-  "group": "com.osmc-radio",
-  "name": "osmc-radio",
+  "group": "com.volumio-radio",
+  "name": "volumio-radio",
   "private": true,
   "scripts": {
-    "osmc_prod": "webpack --config webpackfile.js -p --env.devtool=nosources-source-map",
-    "osmc_dev": "webpack-dev-server --config webpackfile.js --hot"
+    "prod": "webpack --config webpackfile.js -p --env.devtool=nosources-source-map",
+    "dev": "webpack-dev-server --config webpackfile.js --hot"
   },
   "devDependencies": {
     "autoprefixer": "^6.5.3",
@@ -48,21 +48,12 @@
     "core-js": "^2.4.1",
     "es6-promise": "^4.0.5",
     "font-awesome": "latest",
-    "jquery": "latest",
-    "jquery-ui": "1.10.5",
-    "jquery.maskedinput": "digitalbush/jquery.maskedinput",
     "lodash": "2.4.1",
     "messageformat": "0.2.0",
     "moment": "^2.17.1",
-    "ng-clip": "0.2.4",
-    "querystringify": "0.0.4",
     "react": "^15.4.1",
     "react-dom": "^15.4.1",
-    "react-ace": "latest",
     "requirejs": "2.1.14",
-    "url-parse": "^1.1.7",
-    "whatwg-fetch": "^2.0.1",
-    "zeroclipboard": "latest",
-    "first-image-search-load": "latest"
+    "socket.io-client": "latest"
   }
 }

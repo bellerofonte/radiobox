@@ -1,7 +1,11 @@
 import React from 'react';
 import css from './index.css';
 
-export default ({title, status, playerSetVolume, playerPlayPause}) => {
+export default ({title, status, playerSetVolume, playerPlayPause, volume}) => {
+    const vStyle = {
+        width: `${volume || 100}%`,
+        backgroundColor: (volume ? 'black' : 'transparent')
+    };
     return (<div className={css.player}>
         <div className={css.playerInner}>
             <div className={css.playerTitleContainer}>
@@ -20,15 +24,16 @@ export default ({title, status, playerSetVolume, playerPlayPause}) => {
                     <i className="fa fa-fw fa-volume-up"/>
                 </a>
             </div>
+            <div className={css.playerVolume} style={vStyle} />
         </div>
     </div>);
 };
 
 const getStatusIcon = (status) => {
     switch (status) {
-        case 'playing': return 'fa-pause';
-        case 'paused': return 'fa-play';
+        case 'play': return 'fa-pause';
+        case 'stop': return 'fa-play';
         case 'waiting': return 'fa-spinner fa-pulse';
-        default: return 'fa-exclamation-triangle';
+        default: return 'fa-exclamation-circle';
     }
 };

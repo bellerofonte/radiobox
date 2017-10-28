@@ -5,11 +5,11 @@ const logoClasses = [ css.selectorLogo1, css.selectorLogo2, css.selectorLogo3, c
 
 export default ({stations, playerOpen}) => {
     const items = stations
-        .filter(file => file.type === 'song')
+        .filter(file => file.type === 'webradio')
         .map((file, index) => (
-            <li key={index}  onClick={() => playerOpen(file.file)}>
-                <span className={`${css.selectorLogo} ${logoClasses[index % 5]}`}><i className="fa fa-fw fa-music"/></span>
-                <span className={css.selectorTitle}>{file.label}</span>
+            <li key={index}  onClick={() => playerOpen(file)}>
+                <span className={`${css.selectorLogo} ${logoClasses[index % 5]}`}><i className={`fa-fw ${file.icon}`}/></span>
+                <span className={css.selectorTitle}>{file.title}</span>
             </li>
         ));
 
