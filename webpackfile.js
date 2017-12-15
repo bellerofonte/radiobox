@@ -2,7 +2,7 @@ const webpack = require('webpack');
 const path = require('path');
 
 module.exports = (env = {}) => {
-    const srcDir = path.join(__dirname, 'src');
+    const srcDir = path.join(__dirname, 'src/client');
     const distDir = env.dist ? path.join(process.cwd(), env.dist) : path.join(__dirname, 'target/out');
     
     const config = {
