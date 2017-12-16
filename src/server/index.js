@@ -21,11 +21,6 @@ app.get('/*.(ico|png)', (req, res) => {
     res.sendFile(__dirname + '/client/icons' + req.url);
 });
 
-const emitState = (target, state_) => {
-    console.log(state_);
-    target.emit('state', state_);
-};
-
 // create callback for all events
 const readState = (target) => {
     mpc.status.status().then(
@@ -36,7 +31,7 @@ const readState = (target) => {
                     volume: status.volume,
                     status: (status.state === 'play' ? 'play' : 'pause'),
                 };
-                emitState(target, state);
+                target.emit('state', state_);
             });
         });
 };
@@ -44,20 +39,10 @@ const readState = (target) => {
 // Add a connect listener
 io.on('connection', client => {
     // Success!  Now listen to messages to be received
-    client.on('play', event => {
-        console.log('play', event);
-        mpc.playback.pause(false);
-    });
-    client.on('pause', event => {
-        console.log('pause', event);
-        mpc.playback.pause(true);
-    });
-    client.on('volume', event => {
-        console.log('volume', event);
-        event.volume && mpc.playbackOptions.setVolume(event.volume);
-    });
+    client.on('play', event => mpc.playback.pause(false));
+    client.on('pause', event => mpc.playback.pause(true));
+    client.on('volume', event => event.volume && mpc.playbackOptions.setVolume(event.volume));
     client.on('station', event => {
-        console.log('station', event);
         const {station} = event;
         if (!station) return;
         mpc.status.currentSong().then(song => {
