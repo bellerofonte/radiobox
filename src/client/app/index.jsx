@@ -24,19 +24,15 @@ export default class extends React.PureComponent {
 
         this.doConnect = () => {
             if (this.connected || this.ws) return;
-            this.ws = IO('http://volumio.home');
+            this.ws = IO(window.location.href);
             this.ws.on('connect', () => {
                 this.connected = true;
-                this.poll('getState');
+                //this.poll('getState');
             });
-            this.ws.on('pushState', (data) => {
-                this.state.stations.length
-                    ? this.setState(data)
-                    : this.setState(data, () => this.poll('browseLibrary', {uri: 'radio/favourites'}));
+            this.ws.on('state', (state) => {
+                this.setState(state);
             });
-            this.ws.on('pushBrowseLibrary', (data) => {
-                if (this.state.stations.length) return; // stations are already loaded
-                const stations = data.navigation.lists[0].items || [ ];
+            this.ws.on('stations', (stations) => {
                 this.setState({stations});
             });
             this.ws.on('disconnect', () => {
@@ -47,12 +43,12 @@ export default class extends React.PureComponent {
 
         this.playerSetVolume = (delta) => {
             const volume = Math.max(0, Math.min(100, this.state.volume + delta));
-            this.poll('volume', volume);
+            this.poll('volume', {volume});
             this.setState({showVolume: true}, this.setShowVolume);
         };
 
         this.playerPlayPause = () => {
-            this.poll('toggle');
+            this.poll(this.state.status === 'play' ? 'pause' : 'play');
         };
 
         this.setShowVolume = () => {
@@ -79,7 +75,7 @@ export default class extends React.PureComponent {
                         volume={showVolume && volume} />
                 <Selector stations={stations}
                           playerOpen={(file) => this.setState({status: 'waiting'},
-                              () => this.poll('addPlay', file))} />
+                              () => this.poll('station', {station: file}))} />
             </div>
         );
     }

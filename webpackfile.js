@@ -1,9 +1,10 @@
-const webpack = require('webpack');
 const path = require('path');
+const webpack = require('webpack');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = (env = {}) => {
     const srcDir = path.join(__dirname, 'src/client');
-    const distDir = env.dist ? path.join(process.cwd(), env.dist) : path.join(__dirname, 'target/out');
+    const distDir = env.dist ? path.join(process.cwd(), env.dist) : path.join(__dirname, 'target/client');
     
     const config = {
         context: srcDir,
@@ -39,7 +40,13 @@ module.exports = (env = {}) => {
             }),
             new webpack.ProvidePlugin({
                 URL: 'url-parse'
-            })
+            }),
+            new CopyWebpackPlugin([
+                {from:'icons',to:'icons'}
+            ]),
+            new CopyWebpackPlugin([
+                {from:'../server',to:'../'}
+            ]),
         ],
         output: {
             filename: 'index.js',

@@ -32,7 +32,7 @@ export default ({title, status, playerSetVolume, playerPlayPause, volume}) => {
 const getStatusIcon = (status) => {
     switch (status) {
         case 'play': return 'fa-pause';
-        case 'stop': return 'fa-play';
+        case 'pause': return 'fa-play';
         case 'waiting': return 'fa-spinner fa-pulse';
         default: return 'fa-exclamation-circle';
     }
