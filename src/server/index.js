@@ -31,7 +31,7 @@ const readState = (target) => {
                     volume: status.volume,
                     status: (status.state === 'play' ? 'play' : 'pause'),
                 };
-                target.emit('state', state_);
+                target.emit('state', state);
             });
         });
 };
@@ -47,7 +47,13 @@ io.on('connection', client => {
         if (!station) return;
         mpc.status.currentSong().then(song => {
             if (song.path === station.url) { // check wanted station is the same with currently playing
-                readState(client); // if so, do nothing, just update state for that client
+                mpc.status.status().then(status => {
+                    if (status.state === 'play') {
+                        readState(client); // if so, do nothing, just update state for that client
+                    } else {
+                        mpc.playback.pause(false).catch(console.log);
+                    }
+                }).catch(console.log);
             } else { // otherwise, push new item
                 mpc.currentPlaylist.addId(station.url) // then play it and crop playlist
                     .then(id => mpc.playback.playId(id).then(() => cropPlaylist(id))).catch(console.log);
