@@ -27,7 +27,7 @@ const readState = (target) => {
         status => {
             mpc.status.currentSong().then(song => {
                 state = {
-                    title: (song.title || song.name),
+                    title: song ? (song.title || song.name) : '',
                     volume: status.volume,
                     status: (status.state === 'play' ? 'play' : 'pause'),
                 };
@@ -39,14 +39,14 @@ const readState = (target) => {
 // Add a connect listener
 io.on('connection', client => {
     // Success!  Now listen to messages to be received
-    client.on('play', event => mpc.playback.pause(false));
+    client.on('play', event => mpc.playback.play());
     client.on('pause', event => mpc.playback.pause(true));
     client.on('volume', event => event.volume && mpc.playbackOptions.setVolume(event.volume));
     client.on('station', event => {
         const {station} = event;
         if (!station) return;
         mpc.status.currentSong().then(song => {
-            if (song.path === station.url) { // check wanted station is the same with currently playing
+            if (song && song.path === station.url) { // check wanted station is the same with currently playing
                 mpc.status.status().then(status => {
                     if (status.state === 'play') {
                         readState(client); // if so, do nothing, just update state for that client
@@ -86,6 +86,7 @@ const cropPlaylist = (id) => {
 };
 
 mpc.connectUnixSocket('/run/mpd/socket')
+    .then(() => mpc.playbackOptions.setRepeat(true))
     .catch(err => {
         console.log(err);
         // exit if there is no connection to mpd
