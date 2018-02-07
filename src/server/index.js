@@ -3,7 +3,7 @@ const MPC = require('mpc-js').MPC;
 const stations = require('./stations.json');
 let app = require('express')();
 let server = require('http').Server(app);
-let io = require('socket.io')(server);
+let io = require('socket.io')(server, { transports: ['websocket'] });
 let mpc = new MPC();
 let state = { };
 

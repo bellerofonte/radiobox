@@ -24,7 +24,7 @@ export default class extends React.PureComponent {
 
         this.doConnect = () => {
             if (this.connected || this.ws) return;
-            this.ws = IO(window.location.href);
+            this.ws = IO(window.location.href, { transports: ['websocket'] });
             this.ws.on('connect', () => {
                 this.connected = true;
                 //this.poll('getState');
