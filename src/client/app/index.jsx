@@ -12,7 +12,8 @@ export default class extends React.PureComponent {
             status: '',
             volume: 100,
             showVolume: false,
-            stations: []
+            stations: [],
+            idx: -1
         };
         this.ws = null;
         this.connected = false;
@@ -65,7 +66,7 @@ export default class extends React.PureComponent {
     }
 
     render() {
-        const {title, status, stations, volume, showVolume} = this.state;
+        const {title, status, stations, volume, idx, showVolume} = this.state;
         return (
             <div className={css.container} >
                 <Player title={title}
@@ -74,6 +75,7 @@ export default class extends React.PureComponent {
                         playerPlayPause={this.playerPlayPause}
                         volume={showVolume && volume} />
                 <Selector stations={stations}
+                          selectedIdx={idx}
                           playerOpen={(file) => this.setState({status: 'waiting'},
                               () => this.poll('station', {station: file}))} />
             </div>
