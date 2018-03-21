@@ -37,34 +37,12 @@ export default ({stations, selectedIdx, playerOpen}) => {
         <div className={css.selectorInner}>
             <table className={css.selectorList} cellSpacing='0' cellPadding='0'>
                 <tbody >
+                    <tr key={-1} className={css.selectorDummy}>
+                        <td colSpan="2" />
+                    </tr>
                     {items}
                 </tbody>
             </table>
         </div>
     </div>);
 };
-
-/*
-export default ({stations, selectedIdx, playerOpen}) => {
-    const items = stations
-        .map((file, index) => (
-            <li key={index} onClick={() => playerOpen(file)}>
-                <span className={css.selectorLogo}>
-                    <span className={css.selectorLogoGround}
-                         style={(index === selectedIdx ? logoColorsAct : logoColors)[index % 5]}>
-                        <i className={'fa fa-fw fa-microphone'} />
-                    </span>
-                </span>
-                <span className={css.selectorTitle}>{file.title}</span>
-            </li>
-        ));
-
-    return (<div className={css.selector}>
-        <div className={css.selectorInner}>
-            <ul className={css.selectorList}>
-                {items}
-            </ul>
-        </div>
-    </div>);
-};
- */

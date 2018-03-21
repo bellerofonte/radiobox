@@ -1,11 +1,14 @@
 .player {
-    left: 0;
-    right: 0;
-    z-index: 1000000; /* or even higher to prevent guarantee overlapping */
-    background: white;
-    padding: 0;
-    margin: 0;
-    border-bottom: solid 1px #ccc;
+left: 0;
+right: 0;
+top: 0;
+height: 18.5vh;
+position: fixed;
+z-index: 1000000; /* or even higher to prevent guarantee overlapping */
+background: white;
+padding: 0;
+margin: 0;
+border-bottom: solid 1px #ccc;
 }
 
 .player-volume {

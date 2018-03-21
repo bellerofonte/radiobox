@@ -53,3 +53,9 @@
     margin: 0;
     padding: 0 0 0 0.5vh;
 }
+
+.selector-dummy {
+    /* moves stations list below player header */
+    /* +1px is because of border */
+    height: calc(18.5vh + 1px);
+}

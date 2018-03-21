@@ -54,11 +54,12 @@ const readState = (target) => {
     mpc.status.status().then(
         obj => {
             mpc.status.currentSong().then(song => {
+                const idx = song ? config.stations.findIndex(s => s.url === song.path) : -1;
                 state = {
-                    title: song ? (song.title || song.name) : '',
+                    title: song ? (song.title || song.name || (idx > -1 ? config.stations[idx].title : ' ')) : ' ',
                     volume: obj.volume,
                     status: (obj.state === 'play' ? 'play' : 'pause'),
-                    idx: song ? config.stations.findIndex(s => s.url === song.path) : -1
+                    idx
                 };
                 // check if AMP should be switched off
                 pinAmp.set(state.status !== 'play');
@@ -74,20 +75,28 @@ const readState = (target) => {
         });
 };
 
-const selectStation = (station) => {
+const selectStation = (station, client) => {
     if (!station) return;
     mpc.status.currentSong().then(song => {
         if (song && song.path === station.url) { // check wanted station is the same with currently playing
             mpc.status.status().then(status => {
                 if (status.state === 'play') {
-                    readState(client); // if so, do nothing, just update state for that client
+                    client && readState(client); // if so, do nothing, just update state for that client
                 } else {
                     mpc.playback.pause(false).catch(console.log);
                 }
             }).catch(console.log);
         } else { // otherwise, push new item
+            state = {
+                title: station.title || '???',
+                volume: state.volume || 100,
+                status: 'play',
+                idx: config.stations.findIndex(s => s.url === station.url)
+            };
+            io.emit('state', state);
             mpc.currentPlaylist.addId(station.url) // then play it and crop playlist
-                .then(id => mpc.playback.playId(id).then(() => cropPlaylist(id))).catch(console.log);
+                .then(id => mpc.playback.playId(id)
+                .then(() => cropPlaylist(id))).catch(console.log);
         }
     }).catch(console.log);
 };
@@ -98,7 +107,7 @@ io.on('connection', client => {
     client.on('play', event => mpc.playback.play());
     client.on('pause', event => mpc.playback.pause(true));
     client.on('volume', event => event.volume && mpc.playbackOptions.setVolume(event.volume));
-    client.on('station', event => selectStation(event.station));
+    client.on('station', event => selectStation(event.station, client));
     client.emit('stations', config.stations);
     readState(client);
 });
@@ -119,7 +128,7 @@ pinBtn.on('changed', (value) => {
             blinker.handlePause = false;
             const idx = (state.idx === undefined || state.idx === null) ? -1 : +state.idx;
             selectStation(config.stations[(idx + 1) % config.stations.length]);
-        }, 2000);
+        }, config.timeouts.next);
         changeBlinking(config.timeouts.fast);
     } else {
         if (blinker.handlePause) {

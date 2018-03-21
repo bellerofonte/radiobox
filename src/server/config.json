@@ -17,6 +17,18 @@
             "url": "http://ledjamradio.ice.infomaniak.ch/ledjamradio.mp3"
         },
         {
+            "title": "Europa Plus",
+            "url": "http://ep256.streamr.ru"
+        },
+        {
+            "title": "Love Radio",
+            "url": "http://stream.loveradio.ru/12_love_56?type=.aac&UID=536B1FC43467FA575893AFDE46F957F2"
+        },
+        {
+            "title": "Hit FM",
+            "url": "https://rmgradio.gcdn.co/hit_m.aac"
+        },
+        {
             "title": "Radio Record Chill-Out",
             "url": "http://air.radiorecord.ru:8102/chil_320"
         },
@@ -40,6 +52,7 @@
     },
     "timeouts": {
         "fast": 100,
-        "slow": 2000
+        "slow": 1800,
+        "next": 1200
     }
 }
