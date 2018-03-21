@@ -11,7 +11,8 @@ The pins are:
 * +3.3V
 * Ground
 
-The ![`schematic.png`](./schematic.png) shows how it is supposed to be implemented.
+The `schematic.png` shows how it is supposed to be implemented.
+![schematic.png](./schematic.png) 
 
 Input and output pins are to be specified in `config.json` file. 
 
