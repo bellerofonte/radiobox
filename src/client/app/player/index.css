@@ -13,6 +13,11 @@ border-bottom: solid 1px #ccc;
 
 .player-volume {
     height: 3px;
+    left: 0;
+    right: 0;
+    top: calc(18.5vh - 2px); /* 2px - is because of border */
+    position: fixed;
+    z-index: 1000001; /* or even higher to prevent guarantee overlapping */
 }
 
 .player-inner {
