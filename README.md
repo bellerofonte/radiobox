@@ -11,6 +11,8 @@ The pins are:
 * +3.3V
 * Ground
 
+The ![`schematic.png`](./schematic.png) shows how it is supposed to be implemented.
+
 Input and output pins are to be specified in `config.json` file. 
 
 #### Building 
@@ -30,7 +32,7 @@ First, copy files from output directory anywhere to your Raspberry Pi. Then inst
 ```
 npm install http express socket.io mpc-js rpi-gpio
 ```
-You can modify stations list in `stations.json` file.
+You can modify stations list in `config.json` file.
 
 #### Running
 ```
