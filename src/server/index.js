@@ -124,6 +124,8 @@ pinBtn.on('changed', (value) => {
         if (blinker.stationChanger)
             clearTimeout(blinker.stationChanger);
         blinker.stationChanger = setTimeout(() => {
+            if (blinker.stationChanger)
+                clearTimeout(blinker.stationChanger);
             blinker.stationChanger = null;
             blinker.handlePause = false;
             const idx = (state.idx === undefined || state.idx === null) ? -1 : +state.idx;
@@ -151,11 +153,11 @@ pinBtn.on('changed', (value) => {
     So, we need to add new item to the playlist every time we want to switch station
     And it finally may cause too big playlist length.
     The workaround is to remove from playlist previous items (whose will never be used actuallly)
-    if playlist's length is greater than 10
+    if playlist's length is greater than 1
  */
 const cropPlaylist = (id) => {
     mpc.currentPlaylist.playlistInfo().then(items => {
-        if (items.length > 10) {
+        if (items.length > 1) {
             items.filter(i => i.id !== id).forEach(i => mpc.currentPlaylist.deleteId(i.id));
         }
     });
