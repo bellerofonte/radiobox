@@ -23,7 +23,7 @@ const Reader = class extends EventEmitter  {
                     }
                 }
             });
-            GPIO.setup(this.pin, GPIO.DIR_IN, GPIO.EDGE_BOTH,
+            GPIO.setup(`${this.pin}`, GPIO.DIR_IN, GPIO.EDGE_BOTH,
                 (err) => { err ? reject(err) : resolve(); }); // off at startup
         });
     }
@@ -37,7 +37,7 @@ const Writer = class {
 
     setup() {
         return new Promise((resolve, reject) => {
-            GPIO.setup(this.pin, GPIO.DIR_LOW, err => {
+            GPIO.setup(`${this.pin}`, GPIO.DIR_LOW, err => {
                 if (err) reject(err);
                 else {
                     this.value = 0;
@@ -53,7 +53,7 @@ const Writer = class {
             if (value === this.value)
                 resolve(value); // do nothing
             if (value === 1 || value === 0) {
-                GPIO.write(this.pin, value, err => {
+                GPIO.write(`${this.pin}`, value, err => {
                     if (err) reject(err);
                     else {
                         this.value = value;
@@ -71,7 +71,7 @@ const Writer = class {
     }
 
     toggle() {
-        this.set(1 - this.value);
+        return this.set(1 - this.value);
     }
 
     getStr() {

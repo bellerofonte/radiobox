@@ -40,12 +40,12 @@ const changeBlinking = (timeout) => {
     blinker.timeout = timeout;
     if (timeout > 0) {
         // set up timer
-        blinker.timer = setInterval(() => pinLed.toggle(), timeout);
+        blinker.timer = setInterval(() => pinLed.toggle().catch(console.log), timeout);
         // and blink immediately, because timer will wait a timeout
         pinLed.toggle();
     } else {
         blinker.timer = null;
-        pinLed.set(0); // turn LED on
+        pinLed.set(0).catch(console.log); // turn LED on
     }
 };
 
@@ -104,9 +104,9 @@ const selectStation = (station, client) => {
 // Add a connect listener
 io.on('connection', client => {
     // Success!  Now listen to messages to be received
-    client.on('play', event => mpc.playback.play());
-    client.on('pause', event => mpc.playback.pause(true));
-    client.on('volume', event => event.volume && mpc.playbackOptions.setVolume(event.volume));
+    client.on('play', event => mpc.playback.play().catch(console.log));
+    client.on('pause', event => mpc.playback.pause(true).catch(console.log));
+    client.on('volume', event => event.volume && mpc.playbackOptions.setVolume(event.volume).catch(console.log));
     client.on('station', event => selectStation(event.station, client));
     client.emit('stations', config.stations);
     readState(client);
@@ -163,12 +163,25 @@ const cropPlaylist = (id) => {
     });
 };
 
+/*
+    Forces MPD to start playing if it does not yet
+ */
+const bootEmitter = {
+    emit: (event, state) => {
+        if (state.status === 'play') return;
+        if (!state.title || state.title === ' ')
+            selectStation(config.stations[0]);
+        else
+            mpc.playback.play().catch(console.log);
+    }
+};
+
 mpc.connectUnixSocket('/run/mpd/socket')
     .then(() => mpc.playbackOptions.setRepeat(true))
     .then(() => pinBtn.setup())
     .then(() => pinAmp.setup())
     .then(() => pinLed.setup())
-    .then(() => readState()) //read state for empty handler
+    .then(() => readState(bootEmitter)) //read state for boot state handler
     .catch(err => {
         console.log(err);
         // exit if there is no connection to mpd
