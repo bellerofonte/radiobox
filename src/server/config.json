@@ -13,6 +13,18 @@
             "url": "http://139.162.245.57:8251/stream"
         },
         {
+            "title": "Chilled Out",
+            "url": "http://listen.181fm.com/181-chilled_128k.mp3"
+        },
+        {
+            "title": "Lite Sound",
+            "url": "http://www.litesoundsession.com:8000/lite"
+        },
+        {
+            "title": "Chillout Lounge",
+            "url": "http://strm112.1.fm/chilloutlounge_mobile_mp3"
+        },
+        {
             "title": "Ledjam",
             "url": "http://ledjamradio.ice.infomaniak.ch/ledjamradio.mp3"
         },
