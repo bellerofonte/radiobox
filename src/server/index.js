@@ -1,20 +1,25 @@
-const GPIO = require('./pin');
+const Button = require('./button');
+const Pin = require('./pin').Writer;
 const MPC = require('mpc-js').MPC;
 const config = require('./config.json');
+const logger = (err) => console.log(err);
 
 let app = require('express')();
 let server = require('http').Server(app);
 let io = require('socket.io')(server, { transports: ['websocket'] });
 let mpc = new MPC();
-let pinBtn = new GPIO.Reader(config.pins.button);
-let pinAmp = new GPIO.Writer(config.pins.amp);
-let pinLed = new GPIO.Writer(config.pins.led);
+let btnPlay = new Button(config.pins.buttonPlay, config.timeouts.longPress);
+let btnVolD = new Button(config.pins.buttonVolDown, config.timeouts.longPress, config.timeouts.volume);
+let btnVolU = new Button(config.pins.buttonVolUp, config.timeouts.longPress, config.timeouts.volume);
+let pinSmooth = new Pin(config.pins.smooth);
+let pinLedWhite = new Pin(config.pins.ledWhite);
+let pinLedBlue = new Pin(config.pins.ledBlue);
 let state = { };
-let blinker = {
+let buttonHandler = {
     handlePause: true,
     timeout: 0,
-    timer: null,
-    stationChanger: null
+    timerBlink: null,
+    timerVolume: null
 };
 
 server.listen(80);
@@ -31,21 +36,39 @@ app.get('/*.(ico|png)', (req, res) => {
     res.sendFile(__dirname + '/client/icons' + req.url);
 });
 
-const changeBlinking = (timeout) => {
-    if (blinker.timeout === timeout)
-        return; // do nothing
-    if (blinker.timer) {
-        clearInterval(blinker.timer);
+const updateBlinking = () => {
+    if (btnPlay.isPressed() || btnVolD.isPressed() || btnVolU.isPressed()) {
+        changeBlinking(config.timeouts.fast);
+    } else {
+        changeBlinking((state.status === 'play') ? 0 : config.timeouts.slow);
     }
-    blinker.timeout = timeout;
+};
+
+const changeBlinking = (timeout) => {
+    if (buttonHandler.timeout === timeout)
+        return; // do nothing
+    if (buttonHandler.timerBlink) {
+        clearInterval(buttonHandler.timerBlink);
+    }
+    buttonHandler.timeout = timeout;
     if (timeout > 0) {
         // set up timer
-        blinker.timer = setInterval(() => pinLed.toggle().catch(console.log), timeout);
-        // and blink immediately, because timer will wait a timeout
-        pinLed.toggle();
+        buttonHandler.timerBlink = setInterval(() => pinLedWhite.toggle().catch(logger), timeout);
+        if (timeout === config.timeouts.slow) {
+            pinLedWhite.set(1)
+                .then(() => pinSmooth.set(1))
+                .then(() => pinLedWhite.toggle())
+                .catch(logger);
+        } else {
+            pinSmooth.set(0)
+                .then(() => pinLedWhite.toggle())
+                .catch(logger);
+        }
     } else {
-        blinker.timer = null;
-        pinLed.set(0).catch(console.log); // turn LED on
+        buttonHandler.timerBlink = null;
+        pinSmooth.set(0)
+            .then(() => pinLedWhite.set(1))
+            .catch(logger);
     }
 };
 
@@ -62,12 +85,10 @@ const readState = (target) => {
                     idx
                 };
                 // check if AMP should be switched off
-                pinAmp.set(state.status !== 'play');
-                // check state and if paused turn on blinker (slow)
-                const tm = (pinBtn.get() === 1)
-                    ? config.timeouts.fast
-                    : ((state.status === 'play') ? 0 : config.timeouts.slow);
-                changeBlinking(tm);
+                //pinSmooth.set(state.status !== 'play');
+                // TODO - mute amplifier for pause
+
+                updateBlinking();
                 // emit events if needed
                 if (target)
                     target.emit('state', state);
@@ -83,9 +104,9 @@ const selectStation = (station, client) => {
                 if (status.state === 'play') {
                     client && readState(client); // if so, do nothing, just update state for that client
                 } else {
-                    mpc.playback.pause(false).catch(console.log);
+                    mpc.playback.pause(false).catch(logger);
                 }
-            }).catch(console.log);
+            }).catch(logger);
         } else { // otherwise, push new item
             state = {
                 title: station.title || '???',
@@ -96,17 +117,17 @@ const selectStation = (station, client) => {
             io.emit('state', state);
             mpc.currentPlaylist.addId(station.url) // then play it and crop playlist
                 .then(id => mpc.playback.playId(id)
-                .then(() => cropPlaylist(id))).catch(console.log);
+                .then(() => cropPlaylist(id))).catch(logger);
         }
-    }).catch(console.log);
+    }).catch(logger);
 };
 
 // Add a connect listener
 io.on('connection', client => {
     // Success!  Now listen to messages to be received
-    client.on('play', event => mpc.playback.play().catch(console.log));
-    client.on('pause', event => mpc.playback.pause(true).catch(console.log));
-    client.on('volume', event => event.volume && mpc.playbackOptions.setVolume(event.volume).catch(console.log));
+    client.on('play', event => mpc.playback.play().catch(logger));
+    client.on('pause', event => mpc.playback.pause(true).catch(logger));
+    client.on('volume', event => event.volume && mpc.playbackOptions.setVolume(event.volume).catch(logger));
     client.on('station', event => selectStation(event.station, client));
     client.emit('stations', config.stations);
     readState(client);
@@ -116,35 +137,35 @@ mpc.on('changed-mixer', () => readState(io));
 mpc.on('changed-player', () => readState(io));
 mpc.on('changed-playlist', () => readState(io));
 
-pinBtn.on('changed', (value) => {
-    if (value) {
-        // button is pressed
-        // turn on blinker (fast)
-        blinker.handlePause = true;
-        if (blinker.stationChanger)
-            clearTimeout(blinker.stationChanger);
-        blinker.stationChanger = setTimeout(() => {
-            if (blinker.stationChanger)
-                clearTimeout(blinker.stationChanger);
-            blinker.stationChanger = null;
-            blinker.handlePause = false;
-            const idx = (state.idx === undefined || state.idx === null) ? -1 : +state.idx;
-            selectStation(config.stations[(idx + 1) % config.stations.length]);
-        }, config.timeouts.next);
-        changeBlinking(config.timeouts.fast);
-    } else {
-        if (blinker.handlePause) {
-            if (blinker.stationChanger)
-                clearTimeout(blinker.stationChanger);
-            // toggle play/pause
-            state.status === 'play'
-                ? mpc.playback.pause(true)
-                : mpc.playback.play();
-        } else {
-            readState(); // if do nothing - read state to decide what to do with LED
-        }
+btnPlay.on('down', () => {
+    buttonHandler.handlePause = true;
+});
+
+btnPlay.on('long', () => {
+    buttonHandler.handlePause = false;
+    const idx = (state.idx === undefined || state.idx === null) ? -1 : +state.idx;
+    selectStation(config.stations[(idx + 1) % config.stations.length]);
+});
+
+btnPlay.on('up', () => {
+    if (buttonHandler.handlePause) {
+        state.status === 'play'
+            ? mpc.playback.pause(true)
+            : mpc.playback.play();
     }
 });
+
+const changeVolume = (delta) => {
+    mpc.status.status()
+        .then(({volume}) => mpc.playbackOptions.setVolume(Math.max(0, Math.min(100, volume + delta))))
+        .catch(logger);
+};
+
+btnVolD.on('down', () => changeVolume(-2));
+btnVolD.on('hold', () => changeVolume(-2));
+
+btnVolU.on('down', () => changeVolume(+2));
+btnVolU.on('hold', () => changeVolume(+2));
 
 /*
     This is a sucker punch, that Volumio uses.
@@ -172,18 +193,24 @@ const bootEmitter = {
         if (!state.title || state.title === ' ')
             selectStation(config.stations[0]);
         else
-            mpc.playback.play().catch(console.log);
+            mpc.playback.play().catch(logger);
     }
 };
 
 mpc.connectUnixSocket('/run/mpd/socket')
     .then(() => mpc.playbackOptions.setRepeat(true))
-    .then(() => pinBtn.setup())
-    .then(() => pinAmp.setup())
-    .then(() => pinLed.setup())
-    .then(() => readState(bootEmitter)) //read state for boot state handler
+    .then(() => btnPlay.setup(updateBlinking))
+    .then(() => btnVolD.setup(updateBlinking))
+    .then(() => btnVolU.setup(updateBlinking))
+    .then(() => pinSmooth.setup())
+    .then(() => pinLedWhite.setup())
+    .then(() => pinLedBlue.setup())
+    .then(() => pinSmooth.set(0))           // turns of smooth blinking
+    .then(() => pinLedWhite.set(1))         // turns on red LED
+    .then(() => pinLedBlue.set(1))           // turns off red LED
+    .then(() => readState(bootEmitter))     //read state for boot state handler
     .catch(err => {
-        console.log(err);
+        logger(err);
         // exit if there is no connection to mpd
         process.exit(1);
     });

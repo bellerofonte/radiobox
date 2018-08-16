@@ -10,7 +10,7 @@
         },
         {
             "title": "Classic Rock HD Plus",
-            "url": "http://139.162.245.57:8251/stream"
+            "url": "http://144.217.158.59:5310/live/"
         },
         {
             "title": "Chilled Out",
@@ -66,13 +66,17 @@
         }
     ],
     "pins": {
-        "button": 16,
-        "amp": 13,
-        "led": 15
+        "buttonPlay": 11,
+        "buttonVolUp": 13,
+        "buttonVolDown": 15,
+        "ledBlue": 16,
+        "smooth": 18,
+        "ledWhite": 22
     },
     "timeouts": {
         "fast": 100,
-        "slow": 1800,
-        "next": 1200
+        "slow": 2800,
+        "longPress": 1200,
+        "volume": 200
     }
 }
