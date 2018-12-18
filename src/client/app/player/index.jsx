@@ -14,13 +14,13 @@ export default ({title, status, playerSetVolume, playerPlayPause, volume}) => {
                 </div>
             </div>
             <div className={css.playerBtnSet}>
-                <a className={css.playerBtnVolume} onClick={() => playerSetVolume(-5)}>
+                <a className={css.playerBtnVolume} onClick={() => playerSetVolume(-2)}>
                     <i className="fa fa-fw fa-volume-down"/>
                 </a>
                 <a className={css.playerBtnPlay} onClick={playerPlayPause}>
                     <i className={`fa fa-fw ${getStatusIcon(status)}`}/>
                 </a>
-                <a className={css.playerBtnVolume} onClick={() => playerSetVolume(5)}>
+                <a className={css.playerBtnVolume} onClick={() => playerSetVolume(2)}>
                     <i className="fa fa-fw fa-volume-up"/>
                 </a>
             </div>

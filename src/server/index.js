@@ -2,6 +2,8 @@ const Button = require('./button');
 const Pin = require('./pin').Writer;
 const MPC = require('mpc-js').MPC;
 const config = require('./config.json');
+const albumArt = require('album-art');
+
 const logger = (err) => console.log(err);
 
 let app = require('express')();
@@ -22,7 +24,7 @@ let buttonHandler = {
     timerVolume: null
 };
 
-server.listen(80);
+server.listen(process.env.DEBUG === '1' ? 8000 : 80);
 
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/client/index.html');
@@ -36,15 +38,15 @@ app.get('/*.(ico|png)', (req, res) => {
     res.sendFile(__dirname + '/client/icons' + req.url);
 });
 
-const updateBlinking = () => {
+function updateBlinking() {
     if (btnPlay.isPressed() || btnVolD.isPressed() || btnVolU.isPressed()) {
         changeBlinking(config.timeouts.fast);
     } else {
         changeBlinking((state.status === 'play') ? 0 : config.timeouts.slow);
     }
-};
+}
 
-const changeBlinking = (timeout) => {
+function changeBlinking(timeout) {
     if (buttonHandler.timeout === timeout)
         return; // do nothing
     if (buttonHandler.timerBlink) {
@@ -70,10 +72,10 @@ const changeBlinking = (timeout) => {
             .then(() => pinLedWhite.set(1))
             .catch(logger);
     }
-};
+}
 
 // create callback for all events
-const readState = (target) => {
+function readState(target) {
     mpc.status.status().then(
         obj => {
             mpc.status.currentSong().then(song => {
@@ -94,9 +96,9 @@ const readState = (target) => {
                     target.emit('state', state);
             });
         });
-};
+}
 
-const selectStation = (station, client) => {
+function selectStation(station, client) {
     if (!station) return;
     mpc.status.currentSong().then(song => {
         if (song && song.path === station.url) { // check wanted station is the same with currently playing
@@ -120,14 +122,29 @@ const selectStation = (station, client) => {
                 .then(() => cropPlaylist(id))).catch(logger);
         }
     }).catch(logger);
-};
+}
+
+function setVolume(volume) {
+    let vol = +volume;
+    if (!isNaN(vol)) {
+        vol = Math.max(0, Math.min(100, vol));
+        return mpc.playbackOptions.setVolume(vol);
+    }
+    return Promise.reject('invalid volume');
+}
+
+function changeVolume(delta) {
+    mpc.status.status()
+        .then(({volume}) => setVolume(volume + delta))
+        .catch(logger);
+}
 
 // Add a connect listener
 io.on('connection', client => {
     // Success!  Now listen to messages to be received
     client.on('play', event => mpc.playback.play().catch(logger));
     client.on('pause', event => mpc.playback.pause(true).catch(logger));
-    client.on('volume', event => event.volume && mpc.playbackOptions.setVolume(event.volume).catch(logger));
+    client.on('volume', event => setVolume(event.volume).catch(logger));
     client.on('station', event => selectStation(event.station, client));
     client.emit('stations', config.stations);
     readState(client);
@@ -155,12 +172,6 @@ btnPlay.on('up', () => {
     }
 });
 
-const changeVolume = (delta) => {
-    mpc.status.status()
-        .then(({volume}) => mpc.playbackOptions.setVolume(Math.max(0, Math.min(100, volume + delta))))
-        .catch(logger);
-};
-
 btnVolD.on('down', () => changeVolume(-2));
 btnVolD.on('hold', () => changeVolume(-2));
 
@@ -176,13 +187,13 @@ btnVolU.on('hold', () => changeVolume(+2));
     The workaround is to remove from playlist previous items (whose will never be used actuallly)
     if playlist's length is greater than 1
  */
-const cropPlaylist = (id) => {
+function cropPlaylist(id) {
     mpc.currentPlaylist.playlistInfo().then(items => {
         if (items.length > 1) {
             items.filter(i => i.id !== id).forEach(i => mpc.currentPlaylist.deleteId(i.id));
         }
     });
-};
+}
 
 /*
     Forces MPD to start playing if it does not yet
@@ -197,7 +208,13 @@ const bootEmitter = {
     }
 };
 
-mpc.connectUnixSocket('/run/mpd/socket')
+function connectMpc() {
+    return (process.env.DEBUG === '1')
+        ? mpc.connectTCP(process.env.HOST, 6600)
+        : mpc.connectUnixSocket('/run/mpd/socket');
+}
+
+connectMpc()
     .then(() => mpc.playbackOptions.setRepeat(true))
     .then(() => btnPlay.setup(updateBlinking))
     .then(() => btnVolD.setup(updateBlinking))

@@ -13,8 +13,6 @@ module.exports = (env = {}) => {
                 test: /\.jsx?$/,
                 exclude: /node_modules/,
                 use: [{
-                    loader: 'react-hot-loader'
-                },{
                     loader: 'babel-loader',
                     options: {
                         presets: ['es2015', 'stage-2', 'react']
@@ -22,7 +20,7 @@ module.exports = (env = {}) => {
                 }]
             },{
                 test: /\.css$/,
-                loader: 'style-loader!css-loader?modules&camelCase!postcss-loader'
+                loader: 'style-loader!css-loader?modules&camelCase'
             },{
                 test: /\.html$/,
                 loader: 'file-loader?name=[path][name].[ext]!extract-loader!html-loader'
@@ -37,6 +35,10 @@ module.exports = (env = {}) => {
                         require('autoprefixer')({ browsers: ['defaults'] })
                     ]
                 }
+            }),
+            new webpack.DefinePlugin({
+                'RADIOBOX_DEBUG': JSON.stringify(process.env.DEBUG || ''),
+                'RADIOBOX_HOST': JSON.stringify(process.env.HOST || '')
             }),
             new webpack.ProvidePlugin({
                 URL: 'url-parse'

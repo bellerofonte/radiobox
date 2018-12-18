@@ -1,5 +1,5 @@
 const EventEmitter = require('events');
-const GPIO = require('rpi-gpio');
+const GPIO = require('./gpio');
 
 const Reader = class extends EventEmitter  {
     constructor(pin) {

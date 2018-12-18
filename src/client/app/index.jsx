@@ -2,7 +2,7 @@ import React from 'react';
 import Player from './player';
 import Selector from './selector';
 import css from './index.css';
-import IO from 'socket.io-client';
+import WebSocket from 'socket.io-client';
 
 export default class extends React.PureComponent {
     constructor(props) {
@@ -25,7 +25,10 @@ export default class extends React.PureComponent {
 
         this.doConnect = () => {
             if (this.connected || this.ws) return;
-            this.ws = IO(window.location.href, { transports: ['websocket'] });
+            this.ws = WebSocket(RADIOBOX_DEBUG === '1'
+                ? RADIOBOX_HOST
+                : window.location.href,
+                { transports: ['websocket'] });
             this.ws.on('connect', () => {
                 this.connected = true;
                 //this.poll('getState');
