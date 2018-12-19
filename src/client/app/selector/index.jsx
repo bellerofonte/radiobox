@@ -33,8 +33,8 @@ export default ({stations, selectedIdx, playerOpen}) => {
             </tr>
         ));
 
-    return (<div className={css.selector}>
-        <div className={css.selectorInner}>
+    return (
+        <div>
             <table className={css.selectorList} cellSpacing='0' cellPadding='0'>
                 <tbody>
                 <tr key={-1} className={css.selectorDummy}>
@@ -44,5 +44,5 @@ export default ({stations, selectedIdx, playerOpen}) => {
                 </tbody>
             </table>
         </div>
-    </div>);
+    );
 };

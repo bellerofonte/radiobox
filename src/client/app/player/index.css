@@ -1,70 +1,81 @@
 .player {
-    max-width: 60vh;
+    max-width: var(--rbx-max-width);
     width: 100vw;
     top: 0;
-    height: 18.5vh;
     position: fixed;
-    z-index: 1000000; /* or even higher to prevent guarantee overlapping */
     background: white;
     padding: 0;
     margin: 0 auto;
     border-bottom: solid 1px #ccc;
-    text-align: center;
+    display: flex;
+    flex-flow: row wrap;
+    align-items: stretch;
 }
 
-.player-volume {
-    height: 3px;
-    z-index: 1000001; /* or even higher to prevent guarantee overlapping */
-}
-
-.player-inner {
-    margin: 0 auto;
-    text-align: center;
-}
-
-.player-btn-set {
-    display: inline-block;
-    vertical-align: middle;
+.player-icon{
     margin: 0;
-    padding: 0;
+    flex: 0;
+    min-height: var(--rbx-icon-size);
+    max-height: var(--rbx-icon-size);
+    max-width: var(--rbx-icon-size);
+    min-width: var(--rbx-icon-size);
 }
 
-.player-btn-set > a {
-    display: inline;
+.player-icon > img {
+    padding: 0.5vh;
+    width: calc(100% - 1vh);
+    height: calc(100% - 1vh);
+    border-radius: 1vh;
+}
+
+.player-title-box {
+    flex: 1;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: stretch;
+    justify-content: center;
+    max-height: var(--rbx-icon-size);
+}
+
+.player-title {
+    flex: 0;
+    text-align: left;
+    padding: 0.5vh 0 0 1.5vh;
+}
+
+.player-title > b {
+    font-weight: 400;
+}
+
+.player-button-set {
+    display: table;
+    min-width: 100%;
+    min-height: var(--rbx-buttons-height);
+    max-height: var(--rbx-buttons-height);
+}
+
+.player-button-set > a {
+    display: table-cell;
     vertical-align: middle;
 }
 
-.player-btn-set > a:hover {
+.player-button-set > a:hover {
     color: #444;
 }
 
-.player-btn-volume {
-    margin: 0 3vw;
+.player-btn {
     padding: 0;
-    font-size: 6vh;
+    font-size: calc(2vh + var(--rbx-font-size));
 }
 
 .player-btn-play {
     margin: 0;
-    padding: 0;
-    font-size: 8vh;
+    padding: 0 1vh;
+    font-size: calc(5vh + var(--rbx-font-size));
 }
 
-.player-title-container {
-    display: inline-block;
-    overflow: scroll;
-}
-
-.player-title {
-    display: table;
-    max-height: 8vh;
-    min-height: 8vh;
-}
-
-.player-title p {
-    display: table-cell;
-    text-align: center;
-    vertical-align: middle;
-    margin: 0;
-    padding: 0;
+.player-volume {
+    min-height: var(--rbx-volume-height);
+    max-height: var(--rbx-volume-height);
+    min-width: 100%;
 }

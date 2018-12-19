@@ -4,12 +4,18 @@ import Selector from './selector';
 import css from './index.css';
 import WebSocket from 'socket.io-client';
 
+const emptyState = {
+    artist: 'No connection',
+    track: '',
+    icon: '/disconnected.png',
+    status: ''
+};
+
 export default class extends React.PureComponent {
     constructor(props) {
         super(props);
         this.state = {
-            title: 'No connection',
-            status: '',
+            ...emptyState,
             volume: 100,
             showVolume: false,
             stations: [],
@@ -41,7 +47,7 @@ export default class extends React.PureComponent {
             });
             this.ws.on('disconnect', () => {
                 this.connected = false;
-                this.setState({title: 'No connection', status: ''});
+                this.setState({...emptyState});
             });
         };
 
@@ -68,19 +74,30 @@ export default class extends React.PureComponent {
         this.doConnect();
     }
 
+    selectStation(station) {
+        this.setState({status: 'waiting'}, () => this.poll('station', {station}));
+    }
+
+    changeStation(delta) {
+        const {idx, stations} = this.state;
+        this.selectStation(stations[(idx + delta) % stations.length]);
+    }
+
     render() {
-        const {title, status, stations, volume, idx, showVolume} = this.state;
+        const {artist, track, icon, status, stations, volume, idx, showVolume} = this.state;
         return (
             <div className={css.container} >
-                <Player title={title}
+                <Player artist={artist}
+                        track={track}
+                        icon={icon}
                         status={status}
                         playerSetVolume={this.playerSetVolume}
                         playerPlayPause={this.playerPlayPause}
+                        playerChange={idx => this.changeStation(idx)}
                         volume={showVolume && volume} />
                 <Selector stations={stations}
                           selectedIdx={idx}
-                          playerOpen={(file) => this.setState({status: 'waiting'},
-                              () => this.poll('station', {station: file}))} />
+                          playerOpen={file => this.selectStation(file)} />
             </div>
         );
     }

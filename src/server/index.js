@@ -3,7 +3,7 @@ const Pin = require('./pin').Writer;
 const MPC = require('mpc-js').MPC;
 const config = require('./config.json');
 const albumArt = require('album-art');
-const defaultAlbumArt = '/icons/default-album-art.png';
+const defaultAlbumArt = '/default-album-art.png';
 const logger = (err) => console.log(err);
 
 let app = require('express')();
@@ -149,19 +149,19 @@ function selectStation(station, client) {
         if (song && song.path === station.url) { // check wanted station is the same with currently playing
             mpc.status.status().then(status => {
                 if (status.state === 'play') {
-                    client && readState(client); // if so, do nothing, just update state for that client
+                    client && readState().then(s => client.emit('state', s)); // if so, do nothing, just update state for that client
                 } else {
                     mpc.playback.pause(false).catch(logger);
                 }
             }).catch(logger);
         } else { // otherwise, push new item
-            state = {
+            Object.assign(state, {
                 title: station.title || '???',
                 volume: state.volume || 100,
                 status: 'play',
                 idx: config.stations.findIndex(s => s.url === station.url)
-            };
-            io.emit('state', state);
+            });
+            //io.emit('state', state);
             mpc.currentPlaylist.addId(station.url) // then play it and crop playlist
                 .then(id => mpc.playback.playId(id)
                 .then(() => cropPlaylist(id))).catch(logger);

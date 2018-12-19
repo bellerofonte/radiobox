@@ -2,7 +2,7 @@
 .container {
     margin: 0 auto;
     padding: 0;
-    max-width: 60vh;
+    max-width: var(--rbx-max-width);
     width: 100vw;
     text-align: center;
 }
