@@ -24,7 +24,7 @@ export default ({stations, selectedIdx, playerOpen}) => {
                 <td>
                     <div className={css.selectorLogo}
                          style={(index === selectedIdx ? logoColorsAct : logoColors)[index % 5]}>
-                        <i className={'fa fa-fw fa-microphone'} />
+                        <i className={'fa fa-fw fa-microphone'}/>
                     </div>
                 </td>
                 <td style={{width: '100%'}}>
@@ -36,11 +36,11 @@ export default ({stations, selectedIdx, playerOpen}) => {
     return (<div className={css.selector}>
         <div className={css.selectorInner}>
             <table className={css.selectorList} cellSpacing='0' cellPadding='0'>
-                <tbody >
-                    <tr key={-1} className={css.selectorDummy}>
-                        <td colSpan="2" />
-                    </tr>
-                    {items}
+                <tbody>
+                <tr key={-1} className={css.selectorDummy}>
+                    <td colSpan="2"/>
+                </tr>
+                {items}
                 </tbody>
             </table>
         </div>

@@ -32,9 +32,9 @@
 .selector-list > tbody > tr > td {
     padding: 0;
     margin: 0;
-    border-top: 0;
-    border-right: 0;
-    border-left: 0;
+    border-top: none;
+    border-right: none;
+    border-left: none;
     border-bottom: 1px solid #ddd;
 }
 

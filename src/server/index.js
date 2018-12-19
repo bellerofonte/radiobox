@@ -3,7 +3,7 @@ const Pin = require('./pin').Writer;
 const MPC = require('mpc-js').MPC;
 const config = require('./config.json');
 const albumArt = require('album-art');
-
+const defaultAlbumArt = '/icons/default-album-art.png';
 const logger = (err) => console.log(err);
 
 let app = require('express')();
@@ -17,6 +17,7 @@ let pinSmooth = new Pin(config.pins.smooth);
 let pinLedWhite = new Pin(config.pins.ledWhite);
 let pinLedBlue = new Pin(config.pins.ledBlue);
 let state = { };
+let iconState = { };
 let buttonHandler = {
     handlePause: true,
     timeout: 0,
@@ -74,27 +75,71 @@ function changeBlinking(timeout) {
     }
 }
 
-// create callback for all events
-function readState(target) {
-    mpc.status.status().then(
-        obj => {
-            mpc.status.currentSong().then(song => {
-                const idx = song ? config.stations.findIndex(s => s.url === song.path) : -1;
-                state = {
-                    title: song ? (song.title || song.name || (idx > -1 ? config.stations[idx].title : ' ')) : ' ',
-                    volume: obj.volume,
-                    status: (obj.state === 'play' ? 'play' : 'pause'),
-                    idx
-                };
-                // check if AMP should be switched off
-                //pinSmooth.set(state.status !== 'play');
-                // TODO - mute amplifier for pause
+function getSongInfo(song) {
+    const idx = song ? config.stations.findIndex(s => s.url === song.path) : -1;
+    const title = song ? (song.title || song.name || (idx > -1 ? config.stations[idx].title : ' ')) : ' ';
+    const ar = title.split(' - ');
+    const artist = ar[0];
+    const track = ar[1] || ' ';
+    const icon = title === state.title ? state.icon : null;
+    return {title, artist, track, icon, idx};
+}
 
-                updateBlinking();
-                // emit events if needed
-                if (target)
-                    target.emit('state', state);
+function requestAlbumArt(artist, track) {
+    if (!artist || artist === ' ') {
+        // empty artist = default image
+        return Promise.resolve(defaultAlbumArt);
+    }
+    return albumArt(artist, track ? {album: track, size: 'mega'} : {size: 'mega'})
+        .then(icon => {
+            if (typeof icon === 'string') {
+                return Promise.resolve(icon);
+            } else if (track) { // if error - there is no image for {artist, track}
+                return requestAlbumArt(artist); // request just artist with empty album
+            } else { // already requested artist without album
+                return Promise.resolve(defaultAlbumArt);
+            }
+        })
+        .catch(() => {
+            return Promise.resolve(defaultAlbumArt);
+        });
+}
+
+function updateAlbumArt() {
+    // check if icon is not empty - nothing to be done
+    // or we have already requested the same icon
+    if (state.icon || iconState.title === state.title) return;
+    // save title that will be requested
+    iconState.title = state.title;
+    requestAlbumArt(state.artist, state.track)
+        .then(icon => {
+            // check if it is still the same song
+            if (state.title === iconState.title) {
+                Object.assign(state, {icon});
+                io.emit('state', state);
+            }
+        });
+}
+
+// create callback for all events
+function readState() {
+    return mpc.status.status()
+        .then(obj => {
+            Object.assign(state, {
+                volume: obj.volume,
+                status: (obj.state === 'play' ? 'play' : 'pause')
             });
+            return mpc.status.currentSong();
+        })
+        .then(song => {
+            Object.assign(state, getSongInfo(song));
+            updateAlbumArt();
+            // check if AMP should be switched off
+            //pinSmooth.set(state.status !== 'play');
+            // TODO - mute amplifier for pause
+            updateBlinking();
+            // emit events if needed
+            return Promise.resolve(state);
         });
 }
 
@@ -147,12 +192,14 @@ io.on('connection', client => {
     client.on('volume', event => setVolume(event.volume).catch(logger));
     client.on('station', event => selectStation(event.station, client));
     client.emit('stations', config.stations);
-    readState(client);
+    client.emit('state', state);
 });
 
-mpc.on('changed-mixer', () => readState(io));
-mpc.on('changed-player', () => readState(io));
-mpc.on('changed-playlist', () => readState(io));
+const onMpdEvent = () => readState().then(s => io.emit('state', s)).catch(logger);
+
+mpc.on('changed-mixer', onMpdEvent);
+mpc.on('changed-player', onMpdEvent);
+mpc.on('changed-playlist', onMpdEvent);
 
 btnPlay.on('down', () => {
     buttonHandler.handlePause = true;
@@ -198,15 +245,13 @@ function cropPlaylist(id) {
 /*
     Forces MPD to start playing if it does not yet
  */
-const bootEmitter = {
-    emit: (event, state) => {
-        if (state.status === 'play') return;
-        if (!state.title || state.title === ' ')
-            selectStation(config.stations[0]);
-        else
-            mpc.playback.play().catch(logger);
-    }
-};
+function handleBoot(state) {
+    if (state.status === 'play') return;
+    if (!state.title || state.title === ' ')
+        selectStation(config.stations[0]);
+    else
+        mpc.playback.play().catch(logger);
+}
 
 function connectMpc() {
     return (process.env.DEBUG === '1')
@@ -224,8 +269,9 @@ connectMpc()
     .then(() => pinLedBlue.setup())
     .then(() => pinSmooth.set(0))           // turns of smooth blinking
     .then(() => pinLedWhite.set(1))         // turns on red LED
-    .then(() => pinLedBlue.set(1))           // turns off red LED
-    .then(() => readState(bootEmitter))     //read state for boot state handler
+    .then(() => pinLedBlue.set(1))          // turns off red LED
+    .then(() => readState())                // read state
+    .then(s => handleBoot(s))               // and call boot state handler
     .catch(err => {
         logger(err);
         // exit if there is no connection to mpd
