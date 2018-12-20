@@ -36,7 +36,7 @@
     "webpack-dev-server": "^3.1.10"
   },
   "dependencies": {
-    "album-art": "^2.0.1",
+    "axios": "^0.18.0",
     "core-js": "^2.5.4",
     "es6-promise": "^4.2.4",
     "express": "latest",

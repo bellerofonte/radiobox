@@ -43,6 +43,14 @@
     padding: 0.5vh 0 0 1.5vh;
 }
 
+.player-title-small {
+    font-size: calc(0.85 * var(--rbx-font-size)) !important;
+}
+
+.player-title-smaller {
+    font-size: calc(0.7 * var(--rbx-font-size)) !important;
+}
+
 .player-title > b {
     font-weight: 400;
 }

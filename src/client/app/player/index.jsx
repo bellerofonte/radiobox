@@ -1,22 +1,28 @@
 import React from 'react';
 import css from './index.css';
 
+function getTitleStyle(title) {
+    const ex = (title.length > 35)
+        ? css.playerTitleSmaller
+        : (title.length > 25 ? css.playerTitleSmall : '');
+    return [css.playerTitle, ex].join(' ')
+}
+
 export default ({artist, track, icon, volume, status, playerChange, playerSetVolume, playerPlayPause}) => {
     const vStyle = {
         width: `${volume || 100}%`,
         backgroundColor: (volume ? 'black' : 'transparent'),
         height: '100%'
     };
-    const iconUrl = icon || '/default-album-art.png';
     return (<div className={css.player}>
         <div className={css.playerIcon}>
-            <img src={iconUrl}/>
+            <img src={icon}/>
         </div>
         <div className={css.playerTitleBox}>
-            <div className={css.playerTitle}>
+            <div className={getTitleStyle(artist)}>
                 <b>{artist}</b>
             </div>
-            <div className={css.playerTitle}>
+            <div className={getTitleStyle(track)}>
                 {track}
             </div>
         </div>
@@ -51,3 +57,4 @@ const getStatusIcon = (status) => {
         default: return 'fa-exclamation-circle';
     }
 };
+

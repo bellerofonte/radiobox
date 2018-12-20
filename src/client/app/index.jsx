@@ -3,12 +3,16 @@ import Player from './player';
 import Selector from './selector';
 import css from './index.css';
 import WebSocket from 'socket.io-client';
+import albumArt from './album-art';
+
+const disconnectedUrl = (RADIOBOX_DEBUG === '1' ? '/icons' : '') + '/disconnected.png';
+const defaultAlbumArt = (RADIOBOX_DEBUG === '1' ? '/icons' : '') + '/default-album-art.png';
 
 const emptyState = {
     artist: 'No connection',
     track: '',
-    icon: '/disconnected.png',
-    status: ''
+    status: '',
+    icon: disconnectedUrl
 };
 
 export default class extends React.PureComponent {
@@ -34,13 +38,28 @@ export default class extends React.PureComponent {
             this.ws = WebSocket(RADIOBOX_DEBUG === '1'
                 ? RADIOBOX_HOST
                 : window.location.href,
-                { transports: ['websocket'] });
+                {transports: ['websocket']});
             this.ws.on('connect', () => {
                 this.connected = true;
-                //this.poll('getState');
             });
             this.ws.on('state', (state) => {
-                this.setState(state);
+                const {title, name, ...rest} = state;
+                let artist = null, track = null, icon = null;
+                if (!title || title === ' ') {
+                    artist = name || 'RadioBox';
+                    track = '';
+                    icon = defaultAlbumArt;
+                } else {
+                    const ar = title.split(' - ');
+                    artist = ar[0] || name || 'RadioBox';
+                    track = ar[1] || '';
+                    if (track) { // we got real song here
+                        this.updateAlbumArt(artist, track); // request album art
+                    } else {
+                        icon = defaultAlbumArt;
+                    }
+                }
+                this.setState({artist, track, icon, ...rest});
             });
             this.ws.on('stations', (stations) => {
                 this.setState({stations});
@@ -83,10 +102,36 @@ export default class extends React.PureComponent {
         this.selectStation(stations[(idx + delta) % stations.length]);
     }
 
+    requestAlbumArt(artist, track) {
+        return albumArt(artist, track ? {album: track, size: 'mega'} : {size: 'mega'})
+            .then(icon => Promise.resolve(icon))
+            .catch(() => {
+                if (track) { // if error - there is no image for {artist, track}
+                    return this.requestAlbumArt(artist); // request just artist with empty album
+                } else { // already requested artist without album
+                    return Promise.resolve(defaultAlbumArt);
+                }
+            });
+    }
+
+    updateAlbumArt(newArtist, newTrack) {
+        const {artist, track} = this.state;
+        // or we have already requested the same icon
+        if (newArtist === artist || newTrack === track) return;
+        // save title that will be requested
+        this.requestAlbumArt(newArtist, newTrack)
+            .then(icon => {
+                // check if it is still the same song
+                if (this.state.artist === newArtist && this.state.track === newTrack) {
+                    this.setState({icon})
+                }
+            });
+    }
+
     render() {
         const {artist, track, icon, status, stations, volume, idx, showVolume} = this.state;
         return (
-            <div className={css.container} >
+            <div className={css.container}>
                 <Player artist={artist}
                         track={track}
                         icon={icon}
@@ -94,10 +139,10 @@ export default class extends React.PureComponent {
                         playerSetVolume={this.playerSetVolume}
                         playerPlayPause={this.playerPlayPause}
                         playerChange={idx => this.changeStation(idx)}
-                        volume={showVolume && volume} />
+                        volume={showVolume && volume}/>
                 <Selector stations={stations}
                           selectedIdx={idx}
-                          playerOpen={file => this.selectStation(file)} />
+                          playerOpen={file => this.selectStation(file)}/>
             </div>
         );
     }
