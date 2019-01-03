@@ -1,13 +1,13 @@
-# RPi-Radio
+# RadioBox
 
 This stuff turns your Raspberry Pi into internet-radio box.
 It wraps MPD and provides Web-UI for controlling it's playback and volume.
 
-Since commit `#18` RPi-Radio also uses five GPIO pins to control playback and indicate current player state.
+Since commit `#28` RadioBox also uses 8 GPIO pins to control playback and indicate current player state.
 The pins are:
-* Input pin (for button switch)
-* Output pin for LED blinking
-* Output pin for switching amplifier on/off
+* 3 Input pins (for button switches)
+* 2 Output pins for LEDs
+* 1 Output pin for smooth LED blinking
 * +3.3V
 * Ground
 
