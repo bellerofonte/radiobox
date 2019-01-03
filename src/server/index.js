@@ -1,21 +1,20 @@
+const logger = (err) => console.log(err);
 const Button = require('./button');
 const Pin = require('./pin').Writer;
 const MPC = require('mpc-js').MPC;
-const config = require('./config.json');
-const logger = (err) => console.log(err);
-
-let app = require('express')();
-let server = require('http').Server(app);
-let io = require('socket.io')(server, { transports: ['websocket'] });
-let mpc = new MPC();
-let btnPlay = new Button(config.pins.buttonPlay, config.timeouts.longPress);
-let btnVolD = new Button(config.pins.buttonVolDown, config.timeouts.longPress, config.timeouts.volume);
-let btnVolU = new Button(config.pins.buttonVolUp, config.timeouts.longPress, config.timeouts.volume);
-let pinSmooth = new Pin(config.pins.smooth);
-let pinLedWhite = new Pin(config.pins.ledWhite);
-let pinLedBlue = new Pin(config.pins.ledBlue);
-let state = { };
-let buttonHandler = {
+const config = loadConfig();
+const app = require('express')();
+const server = require('http').Server(app);
+const io = require('socket.io')(server, { transports: ['websocket'] });
+const mpc = new MPC();
+const btnPlay = new Button(config.pins.buttonPlay, config.timeouts.longPress);
+const btnVolD = new Button(config.pins.buttonVolDown, config.timeouts.longPress, config.timeouts.volume);
+const btnVolU = new Button(config.pins.buttonVolUp, config.timeouts.longPress, config.timeouts.volume);
+const pinSmooth = new Pin(config.pins.smooth);
+const pinLedWhite = new Pin(config.pins.ledWhite);
+const pinLedBlue = new Pin(config.pins.ledBlue);
+const state = { };
+const buttonHandler = {
     handlePause: true,
     timeout: 0,
     timerBlink: null,
@@ -35,6 +34,14 @@ app.get('/index.js', (req, res) => {
 app.get('/*.(ico|png)', (req, res) => {
     res.sendFile(__dirname + '/client/icons' + req.url);
 });
+
+function loadConfig() {
+    const {stations, ...rest} = require('./config.json');
+    return {
+        stations: stations ? stations.map(([title, url]) => ({title, url})) : [],
+        ...rest
+    };
+}
 
 function updateBlinking() {
     if (btnPlay.isPressed() || btnVolD.isPressed() || btnVolU.isPressed()) {
@@ -110,12 +117,6 @@ function selectStation(station) {
             return mpc.playback.pause(false);
         }
     } else { // otherwise, push new item
-        // Object.assign(state, {
-        //     title: station.title || '???',
-        //     volume: state.volume || 100,
-        //     status: 'play',
-        //     idx: config.stations.findIndex(s => s.url === station.url)
-        // });
         let playerId = null;
         return mpc.currentPlaylist.addId(station.url) // then play it and crop playlist
             .then(id => mpc.playback.playId(playerId = id))
@@ -152,7 +153,6 @@ const onMpdEvent = () => readState().then(s => io.emit('state', s)).catch(logger
 
 mpc.on('changed-mixer', onMpdEvent);
 mpc.on('changed-player', onMpdEvent);
-//mpc.on('changed-playlist', onMpdEvent);
 
 btnPlay.on('down', () => {
     buttonHandler.handlePause = true;
@@ -184,7 +184,7 @@ btnVolU.on('hold', () => changeVolume(+2));
     but it does not properly load a part urls.
     So, we need to add new item to the playlist every time we want to switch station
     And it finally may cause too big playlist length.
-    The workaround is to remove from playlist previous items (whose will never be used actuallly)
+    The workaround is to remove from playlist previous items (whose will never be used actually)
     if playlist's length is greater than 1
  */
 function cropPlaylist(id) {
@@ -222,8 +222,8 @@ connectMpc()
     .then(() => pinLedWhite.setup())
     .then(() => pinLedBlue.setup())
     .then(() => pinSmooth.set(0))           // turns of smooth blinking
-    .then(() => pinLedWhite.set(1))         // turns on red LED
-    .then(() => pinLedBlue.set(1))          // turns off red LED
+    .then(() => pinLedWhite.set(1))         // turns on white LED
+    .then(() => pinLedBlue.set(1))          // turns off blue LED
     .then(() => readState())                // read state
     .then(s => handleBoot(s))               // and call boot state handler
     .catch(err => {

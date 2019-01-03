@@ -5,14 +5,13 @@ import css from './index.css';
 import WebSocket from 'socket.io-client';
 import albumArt from './album-art';
 
-const disconnectedUrl = (RADIOBOX_DEBUG === '1' ? '/icons' : '') + '/disconnected.png';
 const defaultAlbumArt = (RADIOBOX_DEBUG === '1' ? '/icons' : '') + '/default-album-art.png';
 
 const emptyState = {
     artist: 'No connection',
     track: '',
     status: '',
-    icon: disconnectedUrl
+    icon: defaultAlbumArt
 };
 
 export default class extends React.PureComponent {
@@ -53,11 +52,9 @@ export default class extends React.PureComponent {
                     const ar = title.split(' - ');
                     artist = ar[0] || name || 'RadioBox';
                     track = ar[1] || '';
-                    if (track) { // we got real song here
-                        this.updateAlbumArt(artist, track); // request album art
-                    } else {
-                        icon = defaultAlbumArt;
-                    }
+                    icon = track
+                        ? this.updateAlbumArt(artist, track) // request album art
+                        : defaultAlbumArt;
                 }
                 this.setState({artist, track, icon, ...rest});
             });
@@ -115,17 +112,18 @@ export default class extends React.PureComponent {
     }
 
     updateAlbumArt(newArtist, newTrack) {
-        const {artist, track} = this.state;
+        const {artist, track, icon} = this.state;
         // or we have already requested the same icon
-        if (newArtist === artist || newTrack === track) return;
-        // save title that will be requested
-        this.requestAlbumArt(newArtist, newTrack)
-            .then(icon => {
-                // check if it is still the same song
-                if (this.state.artist === newArtist && this.state.track === newTrack) {
-                    this.setState({icon})
-                }
-            });
+        if (newArtist !== artist || newTrack !== track) {
+            this.requestAlbumArt(newArtist, newTrack)
+                .then(icon => {
+                    // check if it is still the same song
+                    if (this.state.artist === newArtist && this.state.track === newTrack) {
+                        this.setState({icon})
+                    }
+                });
+        }
+        return icon;
     }
 
     render() {
