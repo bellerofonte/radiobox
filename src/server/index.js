@@ -10,6 +10,7 @@ const mpc = new MPC();
 const btnPlay = new Button(config.pins.buttonPlay, config.timeouts.longPress);
 const btnVolD = new Button(config.pins.buttonVolDown, config.timeouts.longPress, config.timeouts.volume);
 const btnVolU = new Button(config.pins.buttonVolUp, config.timeouts.longPress, config.timeouts.volume);
+const pinMute = new Pin(config.pins.mute);
 const pinSmooth = new Pin(config.pins.smooth);
 const pinLedWhite = new Pin(config.pins.ledWhite);
 const pinLedBlue = new Pin(config.pins.ledBlue);
@@ -36,9 +37,11 @@ app.get('/*.(ico|png)', (req, res) => {
 });
 
 function loadConfig() {
-    const {stations, ...rest} = require('./config.json');
+    const {stations, pins, timeouts, ...rest} = require('./config.json');
     return {
         stations: stations ? stations.map(([title, url]) => ({title, url})) : [],
+        pins: pins || {},
+        timeouts: timeouts || {},
         ...rest
     };
 }
@@ -49,6 +52,10 @@ function updateBlinking() {
     } else {
         changeBlinking((state.status === 'play') ? 0 : config.timeouts.slow);
     }
+}
+
+function updateMute() {
+    pinMute.set((state.status === 'play') ? 1 : 0);
 }
 
 function changeBlinking(timeout) {
@@ -87,7 +94,6 @@ function getSongInfo(song) {
     return {name, title, idx, url};
 }
 
-// create callback for all events
 function readState() {
     return mpc.status.status()
         .then(obj => {
@@ -99,11 +105,8 @@ function readState() {
         })
         .then(song => {
             Object.assign(state, getSongInfo(song));
-            // check if AMP should be switched off
-            //pinSmooth.set(state.status !== 'play');
-            // TODO - mute amplifier for pause
+            updateMute();
             updateBlinking();
-            // emit events if needed
             return Promise.resolve(state);
         });
 }

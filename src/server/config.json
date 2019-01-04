@@ -23,7 +23,8 @@
         "buttonVolDown": 15,
         "ledBlue": 16,
         "smooth": 18,
-        "ledWhite": 22
+        "ledWhite": 22,
+        "mute": 7
     },
     "timeouts": {
         "fast": 100,

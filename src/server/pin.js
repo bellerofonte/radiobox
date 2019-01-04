@@ -13,6 +13,9 @@ const Reader = class extends EventEmitter  {
     }
 
     setup() {
+        if (!this.pin) {
+            return Promise.resolve();
+        }
         return new Promise((resolve, reject) => {
             GPIO.on('change', (channel, val) => {
                 if (channel === this.pin) {
@@ -36,6 +39,9 @@ const Writer = class {
     }
 
     setup() {
+        if (!this.pin) {
+            return Promise.resolve();
+        }
         return new Promise((resolve, reject) => {
             GPIO.setup(this.pin, GPIO.DIR_LOW, err => {
                 if (err) reject(err);
@@ -49,20 +55,25 @@ const Writer = class {
 
     set(val) {
         const value = +val;
+        if (value !== 0 && value !== 1) {
+            return Promise.reject(new Error('Wrong value: neither 0 nor 1'));
+        }
+        if (value === this.value) {
+            return Promise.resolve(value); // do nothing
+        }
+        if (!this.pin) {
+            // in case of undefined pin - just set target value
+            this.value = value;
+            return Promise.resolve(value);
+        }
         return new Promise((resolve, reject) => {
-            if (value === this.value)
-                resolve(value); // do nothing
-            if (value === 1 || value === 0) {
-                GPIO.write(this.pin, value, err => {
-                    if (err) reject(err);
-                    else {
-                        this.value = value;
-                        resolve(value);
-                    }
-                });
-            } else {
-                reject(new Error('Wrong value: neither 0 nor 1'));
-            }
+            GPIO.write(this.pin, value, err => {
+                if (err) reject(err);
+                else {
+                    this.value = value;
+                    resolve(value);
+                }
+            });
         });
     }
 

@@ -33,7 +33,14 @@ First, copy files from output directory anywhere to your Raspberry Pi. Then inst
 ```
 npm install http express socket.io mpc-js rpi-gpio
 ```
-You can modify stations list in `config.json` file.
+
+#### Configuring
+
+The `config.json` provides all required settings as a JSON object.
+The `stations` field is array of `[title, url]` pairs.
+The `pins` field contains pin numbers (*not names!*) used in this project.
+The `timeouts` field describes, how fast LEDs will blink and how button long press will be handled.
+These two fields can be missed, empty of partially filled (in case if you do not need full functionality).
 
 #### Running
 ```
