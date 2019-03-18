@@ -32,6 +32,10 @@ app.get('/index.js', (req, res) => {
     res.sendFile(__dirname + '/client/index.js');
 });
 
+app.get('/manifest.json', (req, res) => {
+    res.sendFile(__dirname + '/client/manifest.json');
+});
+
 app.get('/*.(ico|png)', (req, res) => {
     res.sendFile(__dirname + '/client/icons' + req.url);
 });
@@ -210,8 +214,7 @@ function handleBoot(state) {
         : mpc.playback.play();
 }
 
-function connectMpc() {
-    return (process.env.DEBUG === '1')
+function connectMpc() {return (process.env.DEBUG === '1')
         ? mpc.connectTCP(process.env.HOST, 6600)
         : mpc.connectUnixSocket('/run/mpd/socket');
 }

@@ -49,6 +49,9 @@ module.exports = (env = {}) => {
             new CopyWebpackPlugin([
                 {from:'../server',to:'../'}
             ]),
+            new CopyWebpackPlugin([
+                {from:'manifest.json',to:'manifest.json'}
+            ])
         ],
         output: {
             filename: 'index.js',

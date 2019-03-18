@@ -1,4 +1,4 @@
-module.exports = process.env.DEBUG === '1'
+module.exports = (process.env.DEBUG === '1' || process.argv[2] === '--no-gpio')
     ? {
         on: (ev, cb) => { },
         setup: (pin, dir, cb1, cb2) => {

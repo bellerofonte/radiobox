@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "prod": "webpack --mode=production --config webpackfile.js -p --env.devtool=nosources-source-map",
-    "dev": "webpack-dev-server --mode=development --env.dist=debug --config webpackfile.js --hot"
+    "dev": "webpack-dev-server --host 0.0.0.0 --mode=development --env.dist=debug --config webpackfile.js --hot"
   },
   "devDependencies": {
     "autoprefixer": "^9.3.1",

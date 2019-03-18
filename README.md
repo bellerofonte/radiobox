@@ -31,7 +31,7 @@ By default, output directory is `./target`. You can change it in `webpackfile.js
 
 First, copy files from output directory anywhere to your Raspberry Pi. Then install needed Nodejs modules
 ```
-npm install http express socket.io mpc-js rpi-gpio
+npm install http express socket.io mpc-js [rpi-gpio]
 ```
 
 #### Configuring
@@ -44,7 +44,11 @@ These two fields can be missed, empty of partially filled (in case if you do not
 
 #### Running
 ```
-sudo nodejs index.js 
+sudo nodejs index.js
+```
+or if you require neither LEDs nor buttons
+```
+GPIO=0 sudo nodejs index.js
 ```
 Or create service using systemctl or init.d.
 
