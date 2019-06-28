@@ -41,9 +41,10 @@ These modules are required for `make_playlist.js`.
 
 The `config.json` provides all required settings as a JSON object.
 The `stations` field is array of `[title, url, genre]` pairs.
-The `include` filed is a external playlist's filename. External playlist could be created by running `make_playlist.js`
+The `include` filed is a path to external playlist file. External playlist could be created by running `make_playlist.js`
 The `pins` field contains pin numbers (*not names!*) used in this project.
 The `timeouts` field describes, how fast LEDs will blink and how button long press will be handled.
+
 Every field is optional. RadioBox will combine items from `stations` field and files from external playlist described in `include`.
 The only condition to run RadioBox - that resulting playlist has at least one entry.
 The two last fields can be missed, empty of partially filled (in case if you do not need full functionality).
