@@ -1,4 +1,5 @@
-@import url(https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css);
+/*@import url(https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css);*/
+@import url(https://use.fontawesome.com/releases/v5.9.0/css/all.css);
 
 :root{
     --rbx-max-width: 60vh;

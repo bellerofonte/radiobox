@@ -11,7 +11,10 @@ const emptyState = {
     artist: 'No connection',
     track: '',
     status: '',
-    icon: defaultAlbumArt
+    icon: defaultAlbumArt,
+    pid: -1,
+    tid: -1,
+    ready: false
 };
 
 export default class extends React.PureComponent {
@@ -21,8 +24,7 @@ export default class extends React.PureComponent {
             ...emptyState,
             volume: 100,
             showVolume: false,
-            stations: [],
-            idx: -1
+            playlist: []
         };
         this.ws = null;
         this.connected = false;
@@ -56,10 +58,10 @@ export default class extends React.PureComponent {
                         ? this.updateAlbumArt(artist, track) // request album art
                         : defaultAlbumArt;
                 }
-                this.setState({artist, track, icon, ...rest});
+                this.setState({artist, track, icon, ready: true, ...rest});
             });
-            this.ws.on('stations', (stations) => {
-                this.setState({stations});
+            this.ws.on('playlist', playlist => {
+                this.setState({playlist});
             });
             this.ws.on('disconnect', () => {
                 this.connected = false;
@@ -91,16 +93,19 @@ export default class extends React.PureComponent {
     }
 
     selectStation(station) {
-        this.setState({status: 'waiting'}, () => this.poll('station', {station}));
+        const {pid, tid} = station;
+        this.setState({status: 'waiting'}, () => this.poll('select', {pid, tid}));
     }
 
     changeStation(delta) {
-        const {idx, stations} = this.state;
-        this.selectStation(stations[(idx + delta) % stations.length]);
+        const {pid, tid, playlist} = this.state;
+        if (pid === -1) return;
+        const tracks = playlist[pid].tracks;
+        this.selectStation(tracks[(tid + delta + tracks.length) % tracks.length]);
     }
 
     requestAlbumArt(artist, track) {
-        return albumArt(artist, track ? {album: track, size: 'mega'} : {size: 'mega'})
+        return albumArt(artist, track)
             .then(icon => Promise.resolve(icon))
             .catch(() => {
                 if (track) { // if error - there is no image for {artist, track}
@@ -127,7 +132,7 @@ export default class extends React.PureComponent {
     }
 
     render() {
-        const {artist, track, icon, status, stations, volume, idx, showVolume} = this.state;
+        const {artist, track, icon, status, playlist, volume, pid, tid, showVolume, ready} = this.state;
         return (
             <div className={css.container}>
                 <Player artist={artist}
@@ -138,9 +143,12 @@ export default class extends React.PureComponent {
                         playerPlayPause={this.playerPlayPause}
                         playerChange={idx => this.changeStation(idx)}
                         volume={showVolume && volume}/>
-                <Selector stations={stations}
-                          selectedIdx={idx}
+                {ready &&
+                <Selector playlist={playlist}
+                          pid={pid}
+                          tid={tid}
                           playerOpen={file => this.selectStation(file)}/>
+                }
             </div>
         );
     }

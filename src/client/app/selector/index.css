@@ -1,28 +1,30 @@
+.selector-body {
+    max-width: var(--rbx-max-width);
+    overflow: hidden;
+}
+
 .selector-list {
+    width: 100%;
     text-align: left;
     padding: 0;
     margin: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     border: 0;
     border-spacing: 0;
 }
 
-.selector-list > tbody > tr {
-    padding: 0;
-}
-
-.selector-list > tbody > tr > td {
-    padding: 0;
-    margin: 0;
+.selector-list > li {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
     border-top: none;
     border-right: none;
     border-left: none;
+    padding: 0;
+    margin: 0;
     border-bottom: 1px solid #ddd;
 }
 
-.selector-list > tbody > tr:hover {
+.selector-list > li:hover {
     background-color: #eee;
 }
 
@@ -35,11 +37,16 @@
 
 .selector-title {
     margin: 0;
-    padding: 0 0 0 0.5vh;
+    padding: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1 1 100%;
 }
 
 .selector-dummy {
     /* moves stations list below player header */
-    /* +1px is because of border */
-    height: calc(var(--rbx-player-height) + 1px);
+    /* -1px is because of border */
+    height: calc(var(--rbx-player-height) - 1px);
+    flex: 1 1 100%;
 }

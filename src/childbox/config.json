@@ -1,0 +1,10 @@
+{
+    "stations": [
+    	["Deti.fm", "http://ic4.101.ru:8000/a199"],
+	["Детские песни", "http://music.myradio.com.ua:8000/kids-songs128.mp3"],
+	["Детcкое радио", "http://den.101.ru:4000/det_66_01"]
+    ],
+    "autoNext": true,
+    "include": "./playlist.json"
+}
+

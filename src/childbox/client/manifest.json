@@ -1,0 +1,24 @@
+{
+    "name": "ChildBox",
+    "short_name": "ChildBox",
+    "icons": [
+        {
+            "src": "/icons/android-icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/icons/apple-icon-180x180.png",
+            "sizes": "180x180",
+            "type": "image/png"
+        },
+        {
+            "src": "/icons/ms-icon-310x310.png",
+            "sizes": "310x310",
+            "type": "image/png"
+        }
+    ],
+    "theme_color": "#951290",
+    "background_color": "#951290",
+    "display": "standalone"
+}
