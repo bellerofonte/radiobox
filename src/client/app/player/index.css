@@ -73,13 +73,13 @@
 
 .player-btn {
     padding: 0;
-    font-size: calc(2vh + var(--rbx-font-size));
+    font-size: calc(1.5vh + var(--rbx-font-size));
 }
 
 .player-btn-play {
     margin: 0;
     padding: 0 1vh;
-    font-size: calc(5vh + var(--rbx-font-size));
+    font-size: calc(3.5vh + var(--rbx-font-size));
 }
 
 .player-volume {

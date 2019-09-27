@@ -29,8 +29,8 @@
 }
 
 .selector-logo {
-    padding: 0;
-    font-size: calc(2vh + var(--rbx-font-size));
+    padding: 0.5vh;
+    font-size: calc(1vh + var(--rbx-font-size));
     margin: 4px 7px;
     border-radius: 1.2vh;
 }
