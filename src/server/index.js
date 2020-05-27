@@ -152,11 +152,19 @@ function updateCurrentSong(song) {
     }
 }
 
+function volumeUserToMpd(vol) {
+    return Math.round(vol * config.volume.max / 100);
+}
+
+function volumeMpdToUser(vol) {
+    return Math.round(vol * 100 / config.volume.max);
+}
+
 function readState() {
     return mpc.status.status()
         .then(obj => {
             Object.assign(state, {
-                volume: obj.volume,
+                volume: volumeMpdToUser(obj.volume),
                 status: (obj.state === 'play' ? 'play' : 'pause')
             });
             return mpc.status.currentSong();
@@ -187,16 +195,19 @@ function selectSong(pid, tid) {
 }
 
 function setVolume(volume) {
-    let vol = +volume;
-    if (!isNaN(vol)) {
-        vol = Math.max(0, Math.min(100, vol));
-        return mpc.playbackOptions.setVolume(vol);
+    let vol_user = +volume;
+    if (!isNaN(vol_user)) {
+        vol_user = Math.max(0, Math.min(100, vol_user));
+        const vol_mpd = volumeUserToMpd(volume);
+        return mpc.playbackOptions.setVolume(vol_mpd);
     }
     return Promise.reject('invalid volume');
 }
 
 function changeVolume(delta) {
-    setVolume(state.volume + delta).catch(logger);
+    // double conversion needed
+    const vol = volumeMpdToUser(volumeUserToMpd(state.volume) + (delta * config.volume.delta));
+    return setVolume(vol).catch(logger);
 }
 
 // Add a connect listener
@@ -204,7 +215,7 @@ io.on('connection', client => {
     // Success!  Now listen to messages to be received
     client.on('play', () => mpc.playback.play().catch(logger));
     client.on('pause', () => mpc.playback.pause(true).catch(logger));
-    client.on('volume', event => setVolume(event.volume).catch(logger));
+    client.on('volume', event => changeVolume(event.delta).catch(logger));
     client.on('select', event => selectSong(event.pid, event.tid).catch(logger));
     client.emit('playlist', config.playlist);
     client.emit('state', state);
@@ -234,11 +245,11 @@ btnPlay.on('up', () => {
     }
 });
 
-btnVolD.on('down', () => changeVolume(-2));
-btnVolD.on('hold', () => changeVolume(-2));
+btnVolD.on('down', () => changeVolume(-1));
+btnVolD.on('hold', () => changeVolume(-1));
 
-btnVolU.on('down', () => changeVolume(+2));
-btnVolU.on('hold', () => changeVolume(+2));
+btnVolU.on('down', () => changeVolume(+1));
+btnVolU.on('hold', () => changeVolume(+1));
 
 /*
     This is a sucker punch, that Volumio uses.
@@ -262,12 +273,21 @@ function cropPlaylist(id) {
     Forces MPD to start playing if it does not yet
  */
 function handleBoot(state) {
-    if (state.status === 'play') {
-        return Promise.resolve();
+    if (state.volume > 100) {
+        // in case of over-big volume value
+        setVolume(volumeMpdToUser(config.volume.def));
     }
-    return (!state.url || state.url === ' ')
-        ? selectSong(0, 0)
-        : mpc.playback.play();
+    if (config.autoPlay) {
+        if (state.status === 'play') {
+            return Promise.resolve();
+        }
+        return (!state.url || state.url === ' ')
+            ? selectSong(0, 0)
+            : mpc.playback.play();
+    } else {
+        return (state.status === 'play') ? mpc.playback.pause() : Promise.resolve();
+    }
+
 }
 
 function connectMpc() {
@@ -276,13 +296,25 @@ function connectMpc() {
         : mpc.connectUnixSocket('/run/mpd/socket');
 }
 
-function checkPlaylist() {
+function checkConfig() {
+    if (!config.volume) {
+        config.volume = {
+            max: 100,
+            def: 10,
+            delta: 1
+        }
+    } else {
+        const vol = config.volume;
+        vol.max = (typeof vol.max === 'number') ? Math.max(10, Math.min(100, vol.max)) : 100;
+        vol.def = (typeof vol.def === 'number') ? Math.max(1, Math.min(vol.max, vol.def)) : 10;
+        vol.delta = (typeof vol.delta === 'number') ? Math.max(1, Math.min(5, vol.delta)) : 1;
+    }
     return config.playlist.length > 0
         ? Promise.resolve()
         : Promise.reject(new Error('Playlist should not be empty!'));
 }
 
-checkPlaylist()
+checkConfig()
     .then(() => connectMpc())
     .then(() => mpc.playbackOptions.setConsume(false))
     .then(() => mpc.playbackOptions.setRandom(false))

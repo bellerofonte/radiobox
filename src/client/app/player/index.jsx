@@ -27,7 +27,7 @@ export default ({artist, track, icon, volume, status, playerChange, playerSetVol
             </div>
         </div>
         <div className={css.playerButtonSet}>
-            <a className={css.playerBtn} onClick={() => playerSetVolume(-2)}>
+            <a className={css.playerBtn} onClick={() => playerSetVolume(-1)}>
                 <i className="fas fa-fw fa-volume-down"/>
             </a>
             <a className={css.playerBtn} onClick={() => playerChange(-1)}>
@@ -39,7 +39,7 @@ export default ({artist, track, icon, volume, status, playerChange, playerSetVol
             <a className={css.playerBtn} onClick={() => playerChange(1)}>
                 <i className="fas fa-fw fa-forward"/>
             </a>
-            <a className={css.playerBtn} onClick={() => playerSetVolume(2)}>
+            <a className={css.playerBtn} onClick={() => playerSetVolume(1)}>
                 <i className="fas fa-fw fa-volume-up"/>
             </a>
         </div>

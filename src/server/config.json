@@ -31,5 +31,11 @@
         "slow": 2800,
         "longPress": 1200,
         "volume": 200
-    }
+    },
+    "volume": {
+        "max": 25,
+        "def": 6,
+        "delta": 1
+    },
+    "autoPlay": false
 }

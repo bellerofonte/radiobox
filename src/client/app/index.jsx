@@ -70,8 +70,7 @@ export default class extends React.PureComponent {
         };
 
         this.playerSetVolume = (delta) => {
-            const volume = Math.max(0, Math.min(100, this.state.volume + delta));
-            this.poll('volume', {volume});
+            this.poll('volume', {delta});
             this.setState({showVolume: true}, this.setShowVolume);
         };
 

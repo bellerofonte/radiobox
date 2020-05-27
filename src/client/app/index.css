@@ -5,4 +5,5 @@
     max-width: var(--rbx-max-width);
     width: 100vw;
     text-align: center;
+    touch-action: manipulation;
 }
