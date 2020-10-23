@@ -57,6 +57,7 @@
 
 .player-button-set {
     display: table;
+    width: 100%;
     min-width: 100%;
     min-height: var(--rbx-buttons-height);
     max-height: var(--rbx-buttons-height);

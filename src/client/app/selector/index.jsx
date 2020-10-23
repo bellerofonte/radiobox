@@ -1,14 +1,14 @@
 import React from 'react';
 import css from './index.css';
 
-const logoColor = { color: '#898f99' };
+const logoColor = { color: '#808691' };
 
 const logoColorsAct = [
-    { backgroundColor: '#ffd8de', color: '#cd6a6e'},
-    { backgroundColor: '#caeecd', color: '#5fb388' },
-    { backgroundColor: '#cae0e6', color: '#95b9ed' },
-    { backgroundColor: '#ffffaa', color: '#bdbb5a' },
-    { backgroundColor: '#e9cbee', color: '#b672cc' }
+    { backgroundColor: '#ffe6e5', color: '#b45a5a'},
+    { backgroundColor: '#d2f7d5', color: '#4e976f' },
+    { backgroundColor: '#d7eff5', color: '#6288c3' },
+    { backgroundColor: '#ffdfc6', color: '#e86d1d' },
+    { backgroundColor: '#f2d3f7', color: '#8d53a3' }
 ];
 
 const genreIcons = {

@@ -31,7 +31,7 @@
 .selector-logo {
     padding: 0.5vh;
     font-size: calc(1vh + var(--rbx-font-size));
-    margin: 4px 7px;
+    margin: 0.25vh 1vh 0.25vh 0.5vh;
     border-radius: 1.2vh;
 }
 
