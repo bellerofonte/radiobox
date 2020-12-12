@@ -370,7 +370,7 @@ function runSpotifyReceiver() {
             '--autoplay',
             '--bitrate', bitrate || 320,
             '--enable-volume-normalisation',
-            `--initial-volume=${volume || 25}`,
+            '--initial-volume', volume || 25,
             '--disable-audio-cache',
             '--onevent', evt_script
         ];
