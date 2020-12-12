@@ -53,7 +53,7 @@ const getStatusIcon = (status) => {
     switch (status) {
         case 'play': return 'fa-pause';
         case 'pause': return 'fa-play';
-        case 'waiting': return 'fa-circle-notch fa-spin';
+        case 'waiting': return 'fa-compact-disc fa-spin';
         default: return 'fa-exclamation-circle';
     }
 };

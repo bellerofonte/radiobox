@@ -5,7 +5,9 @@ const MPC = require('mpc-js').MPC;
 const config = loadConfig();
 const app = require('express')();
 const server = require('http').Server(app);
+const bp = require("body-parser");
 const io = require('socket.io')(server, { transports: ['websocket'] });
+const { spawn } = require('child_process');
 const mpc = new MPC();
 const btnPlay = new Button(config.pins.buttonPlay, config.timeouts.longPress);
 const btnVolD = new Button(config.pins.buttonVolDown, config.timeouts.longPress, config.timeouts.volume);
@@ -15,6 +17,11 @@ const pinSmooth = new Pin(config.pins.smooth);
 const pinLedWhite = new Pin(config.pins.ledWhite);
 const pinLedBlue = new Pin(config.pins.ledBlue);
 const state = { };
+const spotify = {
+    process: null,
+    delay: null,
+    exitHandler: null
+};
 const buttonHandler = {
     handlePause: true,
     timeout: 0,
@@ -23,6 +30,8 @@ const buttonHandler = {
 };
 
 server.listen(process.env.DEBUG === '1' ? 8001 : 80);
+app.use(bp.urlencoded({ extended: false }));
+
 
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/client/index.html');
@@ -38,6 +47,11 @@ app.get('/manifest.json', (req, res) => {
 
 app.get('/*.(ico|png)', (req, res) => {
     res.sendFile(__dirname + '/client/icons' + req.url);
+});
+
+app.post('/spotify_event', (req, res) => {
+    handleSpotifyEvent(req.body.event);
+    res.send('OK\r\n');
 });
 
 function loadPlaylist(file, playlist) {
@@ -70,16 +84,20 @@ function loadConfig() {
     };
 }
 
+function isAnythingPlaing() {
+    return (state.status === 'play' || state.spotifyStatus === 'play');
+}
+
 function updateBlinking() {
     if (btnPlay.isPressed() || btnVolD.isPressed() || btnVolU.isPressed()) {
         changeBlinking(config.timeouts.fast);
     } else {
-        changeBlinking((state.status === 'play') ? 0 : config.timeouts.slow);
+        changeBlinking(isAnythingPlaing() ? 0 : config.timeouts.slow);
     }
 }
 
 function updateMute() {
-    pinMute.set((state.status === 'play') ? 1 : 0);
+    pinMute.set(isAnythingPlaing() ? 1 : 0);
 }
 
 function changeBlinking(timeout) {
@@ -183,7 +201,7 @@ function selectSong(pid, tid) {
     }
     if (state.pid === pid && state.tid === tid) { // check wanted station is the same with currently playing
         if (state.status === 'play') {
-            return onMpdEvent(); // if so, do nothing, just update state for clients
+            return onPlayerEvent(); // if so, do nothing, just update state for clients
         } else {
             return mpc.playback.pause(false);
         }
@@ -198,43 +216,70 @@ function setVolume(volume) {
     let vol_user = +volume;
     if (!isNaN(vol_user)) {
         vol_user = Math.max(0, Math.min(100, vol_user));
-        const vol_mpd = volumeUserToMpd(volume);
+        const vol_mpd = volumeUserToMpd(vol_user);
         return mpc.playbackOptions.setVolume(vol_mpd);
     }
     return Promise.reject('invalid volume');
 }
 
 function changeVolume(delta) {
-    // double conversion needed
-    const vol = volumeMpdToUser(volumeUserToMpd(state.volume) + (delta * config.volume.delta));
-    return setVolume(vol).catch(logger);
+    if (!state.spotifyStatus) {
+        // double conversion needed
+        const vol = volumeMpdToUser(volumeUserToMpd(state.volume) + (delta * config.volume.delta));
+        return setVolume(vol).catch(logger);
+    } else {
+        return Promise.reject('Cannot \'changeVolume\': abused by Spotify');
+    }
+}
+
+function play() {
+    if (!state.spotifyStatus) {
+        return mpc.playback.play();
+    } else {
+        return Promise.reject('Cannot \'play\': abused by Spotify');
+    }
+}
+
+function pause() {
+    if (!state.spotifyStatus) {
+        return mpc.playback.pause(true);
+    } else {
+        return Promise.reject('Coonot \'pause\': abused by Spotify');
+    }
 }
 
 // Add a connect listener
 io.on('connection', client => {
     // Success!  Now listen to messages to be received
-    client.on('play', () => mpc.playback.play().catch(logger));
-    client.on('pause', () => mpc.playback.pause(true).catch(logger));
+    client.on('play', () => play().catch(logger));
+    client.on('pause', () => pause().catch(logger));
     client.on('volume', event => changeVolume(event.delta).catch(logger));
     client.on('select', event => selectSong(event.pid, event.tid).catch(logger));
+    client.on('radio', () => killSpotifyReceiver(onPlayerEvent));
     client.emit('playlist', config.playlist);
     client.emit('state', state);
 });
 
-const onMpdEvent = () => readState().then(s => io.emit('state', s)).catch(logger);
+const onPlayerEvent = () => readState().then(s => io.emit('state', s)).catch(logger);
 
-mpc.on('changed-mixer', onMpdEvent);
-mpc.on('changed-player', onMpdEvent);
+mpc.on('changed-mixer', onPlayerEvent);
+mpc.on('changed-player', onPlayerEvent);
 
 btnPlay.on('down', () => {
-    buttonHandler.handlePause = true;
+    buttonHandler.handlePause = !state.spotifyStatus;
 });
 
 btnPlay.on('long', () => {
     buttonHandler.handlePause = false;
-    const pid = state.pid === -1 ? 0 : state.pid;
-    const tid = state.tid;
-    selectSong(pid, (tid + 1) % config.playlist[pid].tracks.length).catch(logger);
+    if (state.spotifyStatus) {
+        // if box is abused by Spotify - kill it's process
+        // and then - try to start playing
+        killSpotifyReceiver(play);
+    } else {
+        const pid = state.pid === -1 ? 0 : state.pid;
+        const tid = state.tid;
+        selectSong(pid, (tid + 1) % config.playlist[pid].tracks.length).catch(logger);
+    }
 });
 
 btnPlay.on('up', () => {
@@ -314,6 +359,88 @@ function checkConfig() {
         : Promise.reject(new Error('Playlist should not be empty!'));
 }
 
+function runSpotifyReceiver() {
+    if (!config.spotify || !config.spotify.enabled) {
+        return Promise.resolve();
+    } else {
+        const {bitrate, backend, device, volume, restartTimeout} = config.spotify;
+        const evt_script = __dirname + '/onevent.sh';
+        const options = [
+            '--name', 'RadioBox',
+            '--autoplay',
+            '--bitrate', bitrate || 320,
+            '--enable-volume-normalisation',
+            `--initial-volume=${volume || 25}`,
+            '--disable-audio-cache',
+            '--onevent', evt_script
+        ];
+        if (backend) {
+            options.push('--backend', backend);
+        }
+        if (device) {
+            options.push('--device', device);
+        }
+        // launch Spotify Connect receiver process
+        console.log('trying to start librespot process');
+        ps = spawn('/usr/bin/librespot', options);
+        ps.stdout.pipe(process.stdout);
+        ps.stderr.pipe(process.stderr);
+        console.log(`librespot process started with pid ${ps.pid}`);
+        // update state with new information
+        state.spotifyStatus = null;
+        spotify.process = ps;
+        spotify.delay =  null;
+        spotify.exitHandler = null;
+        // handle exit event
+        ps.on('close', (code) => {
+            console.log(`librespot process exited with code ${code}`);
+            // if there is
+            const handler = spotify.exitHandler;
+            state.spotifyStatus = null;
+            spotify.process = null;
+            spotify.exitHandler = null;
+            if (!spotify.delay) {
+                spotify.delay = setTimeout(runSpotifyReceiver, restartTimeout || 3000);
+            }
+            handler && handler();
+        });
+        return Promise.resolve();
+    }
+}
+
+function handleSpotifyEvent(event) {
+    switch (event) {
+        case 'volume_set':
+        case 'start':
+            if (!state.spotifyStatus) {
+                state.spotifyStatus = 'ready';
+                if (state.status === 'play')
+                    mpc.playback.pause(true);
+            }
+            break;
+        case 'stop':
+            state.spotifyStatus = null;
+            onPlayerEvent();
+            break;
+        case 'playing':
+            state.spotifyStatus = 'play';
+            onPlayerEvent();
+            break;
+        case 'paused':
+            state.spotifyStatus = 'pause';
+            onPlayerEvent();
+            break;
+    }
+}
+
+function killSpotifyReceiver(handler) {
+    if (spotify.process) {
+        console.log('trying to kill librespot process');
+        spotify.exitHandler = handler;
+        spotify.process.kill()
+    }
+}
+
 checkConfig()
     .then(() => connectMpc())
     .then(() => mpc.playbackOptions.setConsume(false))
@@ -331,6 +458,7 @@ checkConfig()
     .then(() => pinLedBlue.set(1))          // turns off blue LED
     .then(() => readState())                // read state
     .then(s => handleBoot(s))               // and call boot state handler
+    .then(() => runSpotifyReceiver())       // run Spotify Connect receiver if configured
     .catch(err => {
         logger(err);
         // exit if there is no connection to mpd

@@ -1,0 +1,32 @@
+.spotify-container {
+    --rbx-spotify-v-padding: 2vh;
+    height: calc(100vh - 2 * var(--rbx-spotify-v-padding));
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    overflow: auto;
+    padding: var(--rbx-spotify-v-padding) 5vh;
+    margin: 0;
+}
+
+.spotify-container::before,
+.spotify-container::after {
+    content: '';
+    display: block;
+    flex: 1;
+}
+
+.spotify-logo {
+    height: var(--rbx-icon-size);
+    width: 100%;
+    object-fit: contain;
+}
+
+.spotify-button {
+    padding: calc(var(--rbx-spotify-v-padding) / 2) var(--rbx-spotify-v-padding);
+    margin: calc(var(--rbx-spotify-v-padding) / 2) var(--rbx-spotify-v-padding);
+    background-color: #eeeeee;
+    border: 1px solid #cccccc;
+    border-radius: calc(var(--rbx-spotify-v-padding) / 2);
+    font-weight: bolder;
+}

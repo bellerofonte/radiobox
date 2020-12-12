@@ -4,6 +4,8 @@ import Selector from './selector';
 import css from './index.css';
 import WebSocket from 'socket.io-client';
 import albumArt from './album-art';
+import Spotify from './spotify';
+import Intro from './intro';
 
 const defaultAlbumArt = (RADIOBOX_DEBUG === '1' ? '/icons' : '') + '/default-album-art.png';
 
@@ -130,24 +132,35 @@ export default class extends React.PureComponent {
         return icon;
     }
 
+    getContent() {
+        const {ready, spotifyStatus} = this.state;
+        if (!ready) {
+            return <Intro/>;
+        }
+        if (spotifyStatus) {
+            return <Spotify turnOff={() => this.poll('radio')}/>;
+        }
+        const {artist, track, icon, status, playlist, volume, pid, tid, showVolume} = this.state;
+        return [
+            <Player artist={artist}
+                    track={track}
+                    icon={icon}
+                    status={status}
+                    playerSetVolume={this.playerSetVolume}
+                    playerPlayPause={this.playerPlayPause}
+                    playerChange={idx => this.changeStation(idx)}
+                    volume={showVolume && volume}/>,
+            <Selector playlist={playlist}
+                      pid={pid}
+                      tid={tid}
+                      playerOpen={file => this.selectStation(file)}/>
+        ];
+    }
+
     render() {
-        const {artist, track, icon, status, playlist, volume, pid, tid, showVolume, ready} = this.state;
         return (
             <div className={css.container}>
-                <Player artist={artist}
-                        track={track}
-                        icon={icon}
-                        status={status}
-                        playerSetVolume={this.playerSetVolume}
-                        playerPlayPause={this.playerPlayPause}
-                        playerChange={idx => this.changeStation(idx)}
-                        volume={showVolume && volume}/>
-                {ready &&
-                <Selector playlist={playlist}
-                          pid={pid}
-                          tid={tid}
-                          playerOpen={file => this.selectStation(file)}/>
-                }
+                {this.getContent()}
             </div>
         );
     }

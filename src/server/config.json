@@ -37,5 +37,13 @@
         "def": 6,
         "delta": 1
     },
-    "autoPlay": false
+    "autoPlay": false,
+    "spotify": {
+        "enabled": true,
+        "backend": "alsa",
+        "device": "hw:0,0",
+        "bitrate": 320,
+        "volume": 30,
+        "restartTimeout": 3000
+    }
 }

@@ -1,0 +1,18 @@
+.intro-container {
+    height: 100vh;
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    overflow: auto;
+    padding: 0;
+    margin: 0;
+    font-size: var(--rbx-icon-size);
+    color: #0084D7;
+}
+
+.intro-container::before,
+.intro-container::after {
+    content: '';
+    display: block;
+    flex: 1;
+}
